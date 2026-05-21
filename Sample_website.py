@@ -1,406 +1,328 @@
-"""
-FridgeBuddy - Single file Streamlit app for Streamlit Cloud
-All logic (storage, food utils, mascot) is embedded directly in this file.
-Data persists via st.session_state (resets on page refresh - suitable for demo/sample site).
-"""
-
 import streamlit as st
 import json
 import os
-import time
-from datetime import date, datetime
-
-# ─────────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────────
-st.set_page_config(
-    page_title="FridgeBuddy",
-    page_icon="🥕",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# ─────────────────────────────────────────────
-# SESSION STATE INIT
-# ─────────────────────────────────────────────
-if "foods" not in st.session_state:
-    st.session_state.foods = []
-
-if "toast" not in st.session_state:
-    st.session_state.toast = None
-
-# ─────────────────────────────────────────────
-# GLOBAL CSS
-# ─────────────────────────────────────────────
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Nunito', sans-serif !important;
-    background-color: #fdf9f3 !important;
-    color: #3a3a3a !important;
-}
-
-#MainMenu, footer, header { visibility: hidden; }
-.block-container { padding-top: 1.5rem !important; padding-bottom: 2rem !important; }
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: #eef6ee !important;
-    border-right: 2px solid #c8e6c8 !important;
-}
-
-/* Add button */
-[data-testid="stSidebar"] .stButton > button {
-    background: linear-gradient(135deg, #7aaa7a, #5a9a5a) !important;
-    color: white !important;
-    font-weight: 800 !important;
-    font-size: 1rem !important;
-    border: none !important;
-    border-radius: 14px !important;
-    padding: 0.65rem 1.2rem !important;
-    width: 100% !important;
-    box-shadow: 0 4px 12px rgba(122,170,122,0.4) !important;
-    transition: transform 0.15s !important;
-}
-[data-testid="stSidebar"] .stButton > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(122,170,122,0.55) !important;
-}
-
-/* Delete buttons */
-.stButton > button {
-    border-radius: 8px !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-weight: 700 !important;
-    transition: transform 0.1s !important;
-}
-.stButton > button:hover { transform: scale(1.04) !important; }
-
-/* Metric cards */
-[data-testid="stMetric"] {
-    background: white !important;
-    border-radius: 14px !important;
-    padding: 1rem 1.25rem !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
-    border: 1.5px solid #ececec !important;
-}
-[data-testid="stMetricLabel"] { font-weight: 700 !important; color: #9a9a9a !important; }
-[data-testid="stMetricValue"] { font-weight: 900 !important; }
-
-input, select, textarea {
-    border-radius: 10px !important;
-    font-family: 'Nunito', sans-serif !important;
-}
-hr { border-color: #c8e6c8 !important; }
-</style>
-""", unsafe_allow_html=True)
-
-
-# ─────────────────────────────────────────────
-# FOOD UTILS
-# ─────────────────────────────────────────────
-
-EMOJI_MAP = {
-    "apple": "🍎", "banana": "🍌", "orange": "🍊", "grape": "🍇",
-    "strawberr": "🍓", "watermelon": "🍉", "mango": "🥭", "peach": "🍑",
-    "pear": "🍐", "cherry": "🍒", "lemon": "🍋", "lime": "🍋",
-    "blueberr": "🫐", "raspberr": "🍓", "avocado": "🥑", "pineapple": "🍍",
-    "coconut": "🥥", "kiwi": "🥝",
-    "carrot": "🥕", "broccoli": "🥦", "spinach": "🥬", "lettuce": "🥬",
-    "tomato": "🍅", "cucumber": "🥒", "pepper": "🫑", "onion": "🧅",
-    "garlic": "🧄", "potato": "🥔", "corn": "🌽", "mushroom": "🍄",
-    "celery": "🥬", "cabbage": "🥬", "zucchini": "🥒",
-    "milk": "🥛", "cheese": "🧀", "butter": "🧈", "yogurt": "🫙",
-    "egg": "🥚", "cream": "🥛",
-    "chicken": "🍗", "beef": "🥩", "pork": "🥓", "fish": "🐟",
-    "salmon": "🐟", "shrimp": "🍤", "tuna": "🐟", "meat": "🥩",
-    "bacon": "🥓", "sausage": "🌭", "tofu": "🫙",
-    "bread": "🍞", "rice": "🍚", "pasta": "🍝", "noodle": "🍜",
-    "pizza": "🍕", "burger": "🍔", "sandwich": "🥪",
-    "cake": "🎂", "cookie": "🍪", "chocolate": "🍫", "candy": "🍬",
-    "donut": "🍩", "ice cream": "🍦",
-    "juice": "🧃", "soda": "🥤", "water": "💧", "coffee": "☕",
-    "tea": "🍵", "beer": "🍺", "wine": "🍷",
-    "leftover": "🍱", "soup": "🍲", "salad": "🥗", "sauce": "🫙",
-    "jam": "🫙", "honey": "🍯",
-}
-
-CATEGORY_EMOJI = {
-    "Fruits": "🍎", "Vegetables": "🥦", "Dairy": "🥛",
-    "Snacks": "🍪", "Drinks": "🧃", "Frozen": "❄️", "Leftovers": "🍱",
-}
-
-
-def detect_emoji(name: str, category: str) -> str:
-    lower = name.lower()
-    for keyword, emoji in EMOJI_MAP.items():
-        if keyword in lower:
-            return emoji
-    return CATEGORY_EMOJI.get(category, "🍽️")
-
-
-def days_left(expiry_date_str: str):
-    try:
-        expiry = datetime.strptime(expiry_date_str, "%Y-%m-%d").date()
-        return (expiry - date.today()).days
-    except Exception:
-        return None
-
-
-def get_urgency(days) -> str:
-    if days is None:  return "ok"
-    if days < 0:      return "expired"
-    if days <= 2:     return "critical"
-    if days <= 5:     return "warning"
-    return "ok"
-
-
-def get_status_label(days) -> str:
-    if days is None: return "Unknown date"
-    if days < 0:     return f"💀 Expired {abs(days)} day{'s' if abs(days) != 1 else ''} ago"
-    if days == 0:    return "🔥 Expires TODAY"
-    if days == 1:    return "⚡ Expires TOMORROW"
-    if days <= 2:    return f"😬 Expires in {days} days"
-    if days <= 5:    return f"🟡 {days} days left"
-    if days <= 14:   return f"🟢 {days} days left"
-    return f"✅ {days} days left"
-
-
-def sort_by_expiry(foods: list) -> list:
-    return sorted(foods, key=lambda f: (days_left(f.get("expiry_date", "")) or 9999))
-
-
-def compute_stats(foods: list) -> dict:
-    expiring_soon = [f for f in foods if get_urgency(days_left(f.get("expiry_date", ""))) == "critical"]
-    expired       = [f for f in foods if get_urgency(days_left(f.get("expiry_date", ""))) == "expired"]
-    return {
-        "total": len(foods),
-        "expiring_soon": expiring_soon,
-        "expired": expired,
-        "waste_prevented": max(0, len(foods) - len(expired)),
-    }
-
-
-# ─────────────────────────────────────────────
-# MASCOT MESSAGES
-# ─────────────────────────────────────────────
 import random
+from datetime import datetime
 
-HEALTHY_MSGS = [
-    "Your fridge is absolutely thriving today no food casualties detected",
-    "All items are safe and sound! I'm so proud of you",
-    "Chef's kiss — your fridge is living its best life right now.",
-    "Zero drama in the fridge today. Seriously impressive fridge management.",
-    "Everything is fresh and fine. You deserve a gold star — take two.",
-]
-EXPIRING_TMPL = [
-    lambda n, e: f"Girl PLEASE eat the {n} {e} — it's fighting for its life out there!",
-    lambda n, e: f"The {n} {e} is sending you a distress signal. It deserves better!!",
-    lambda n, e: f"POV: your {n} {e} at 2am wondering why you haven't eaten it yet",
-    lambda n, e: f"BREAKING: {n} {e} is on its last legs. This is not a drill.",
-    lambda n, e: f"{n} {e} said 'I thought we were friends' — eat it before it's too late!",
-]
-EXPIRED_TMPL = [
-    lambda n, e: f"We lost the {n} {e} soldier — it has seen things... may it rest in peace",
-    lambda n, e: f"Moment of silence for the {n} {e} — it deserved better. We all did.",
-    lambda n, e: f"The {n} {e} has left the chat — please delete it and move forward.",
-    lambda n, e: f"RIP {n} {e} — gone but not forgotten. Mostly just... gone.",
-]
-CHAOS_MSGS = [
-    "Your fridge is living in complete chaos rn but we love you anyway",
-    "Multiple items at risk! Please. PLEASE eat something.",
-    "The fridge is screaming internally. This is a Code Green emergency.",
-]
+# ==============================================================================
+# 1. TECHNICAL ARCHITECTURE & DATA STORAGE CONFIGURATION
+# ==============================================================================
 
-def get_mascot(stats: dict) -> dict:
-    soon, expired, total = stats["expiring_soon"], stats["expired"], stats["total"]
-    if total == 0:
-        return {"msg": "Hey! Add your first item so I can keep watch — I'm very responsible, I promise.", "mood": "happy", "tip": "Tip: Start with dairy and produce — they expire fastest!", "face": "😄"}
-    if len(soon) >= 3 and len(expired) >= 1:
-        return {"msg": random.choice(CHAOS_MSGS), "mood": "chaos", "tip": "Tip: Batch-cook everything expiring into one stir-fry!", "face": "🤯"}
-    if expired:
-        f = expired[0]
-        return {"msg": random.choice(EXPIRED_TMPL)(f["name"], f["emoji"]), "mood": "sad", "tip": "Tip: Hit the delete button to remove expired items and keep your tracker accurate.", "face": "😢"}
-    if soon:
-        f = soon[0]
-        return {"msg": random.choice(EXPIRING_TMPL)(f["name"], f["emoji"]), "mood": "worried", "tip": "Tip: Items expiring within 2 days make great stir-fry, smoothies, or omelettes!", "face": "😰"}
-    return {"msg": random.choice(HEALTHY_MSGS), "mood": "happy", "tip": "Tip: Keep adding items as you shop so FridgeBuddy can keep watch!", "face": "😄"}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+FILE_PATH = os.path.join(DATA_DIR, "foods.json")
 
-MOOD_STYLE = {
-    "happy":   ("background:#f0f7f0; border:2px solid #8fbc8f;",   "#2e6b2e"),
-    "worried": ("background:#fff8e1; border:2px solid #ffd97d;",   "#9a6f00"),
-    "sad":     ("background:#ffeaea; border:2px solid #ff8a80;",   "#b02020"),
-    "chaos":   ("background:#ffe8e3; border:2px solid #ffb4a2;",   "#8b3a20"),
+def initialize_storage():
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+    if not os.path.exists(FILE_PATH):
+        with open(FILE_PATH, "w") as f:
+            json.dump([], f)
+
+def load_foods():
+    initialize_storage()
+    try:
+        with open(FILE_PATH, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        return []
+
+def save_foods(foods):
+    initialize_storage()
+    with open(FILE_PATH, "w") as f:
+        json.dump(foods, f, indent=4)
+
+def add_food_item(name, expiry_date, category, emoji):
+    foods = load_foods()
+    new_id = max([item.get("id", 0) for item in foods], default=0) + 1
+    new_item = {
+        "id": new_id,
+        "name": name,
+        "expiry_date": expiry_date.strftime("%Y-%m-%d"),
+        "category": category,
+        "emoji": emoji
+    }
+    foods.append(new_item)
+    save_foods(foods)
+
+def delete_food_item(item_id):
+    foods = load_foods()
+    updated_foods = [item for item in foods if item.get("id") != item_id]
+    save_foods(updated_foods)
+
+# ==============================================================================
+# 2. ALGORITHMIC FRIDGE INTELLIGENCE & UTILITY SCHEMAS
+# ==============================================================================
+
+EMOJI_DICTIONARY = {
+    "apple": "🍎", "banana": "🍌", "milk": "🥛", "egg": "🥚", "cheese": "🧀",
+    "carrot": "🥕", "tomato": "🍅", "potato": "🥔", "onion": "🧅", "chicken": "🍗",
+    "meat": "🥩", "fish": "🐟", "rice": "🍚", "bread": "🍞", "yogurt": "🍦",
+    "strawberry": "🍓", "berry": "🍓", "orange": "🍊", "lemon": "🍋", "mango": "🥭",
+    "grape": "🍇", "watermelon": "🍉", "broccoli": "🥦", "lettuce": "🥬", "salad": "🥗",
+    "spinach": "🥬", "cucumber": "🥒", "cake": "🍰", "chocolate": "🍫", "juice": "🧃",
+    "soda": "🥤", "beer": "🍺", "pizza": "🍕", "burger": "🍔", "leftover": "🍱"
 }
 
-CARD_STYLE = {
-    "expired":  ("background:#ffeaea; border:2px solid #ff8a80;"),
-    "critical": ("background:#fff8e1; border:2px solid #ffd97d;"),
-    "warning":  ("background:#eef6ee; border:2px solid #c8e6c8;"),
-    "ok":       ("background:#ffffff; border:2px solid #e8e8e8;"),
-}
+def auto_detect_emoji(food_name, category_emoji):
+    cleaned_name = food_name.lower().strip()
+    for keyword, emoji in EMOJI_DICTIONARY.items():
+        if keyword in cleaned_name:
+            return emoji
+    return category_emoji
 
+def process_and_sort_fridge(foods_list):
+    today = datetime.today().date()
+    processed_list = []
+    
+    for item in foods_list:
+        expiry_date = datetime.strptime(item["expiry_date"], "%Y-%m-%d").date()
+        days_left = (expiry_date - today).days
+        item_copy = item.copy()
+        item_copy["days_left"] = days_left
+        processed_list.append(item_copy)
+        
+    return sorted(processed_list, key=lambda x: x["days_left"])
 
-# ─────────────────────────────────────────────
-# SIDEBAR — Add Food Form
-# ─────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("## 🥕 FridgeBuddy")
-    st.markdown("*Your cozy fridge companion*")
-    st.divider()
-    st.markdown("### Add to Fridge")
+def get_mascot_feedback(processed_foods):
+    if not processed_foods:
+        return "🧹 Your fridge is completely empty. Did you move out? Time to restock! 🛒"
+        
+    expired_items = [f for f in processed_foods if f["days_left"] < 0]
+    expiring_soon = [f for f in processed_foods if 0 <= f["days_left"] <= 2]
+    
+    if expired_items:
+        unfortunate_soldier = expired_items[0]["name"]
+        msg = [
+            f"🚨 We lost the {unfortunate_soldier} soldier 💔 it has seen things...",
+            f"☣️ The {unfortunate_soldier} is creating a new ecosystem in there. Throw it away!",
+            f"🤢 RIP {unfortunate_soldier}. Smells like bad decisions."
+        ]
+        return random.choice(msg)
+        
+    if expiring_soon:
+        urgent_food = expiring_soon[0]["name"]
+        msg = [
+            f"😭 Girl PLEASE eat the {urgent_food}! It is literally fighting for survival right now.",
+            f"👀 Don't you dare ignore the {urgent_food} today. It's calling your name.",
+            f"⏱️ Tick tock, the {urgent_food} clock is running out!"
+        ]
+        return random.choice(msg)
+        
+    healthy_msg = [
+        "Your fridge is thriving today ✨ no food casualties detected 🫡",
+        "Looking good! Clean fridge, clean mind, wealthy bank account 💅",
+        "No alarms ringing! Grab a healthy snack, you earned it 🍎"
+    ]
+    return random.choice(healthy_msg)
 
-    food_name = st.text_input("Food Name", placeholder="e.g. Greek yogurt, Apples...", key="input_name")
-    category  = st.selectbox("Category", ["Fruits", "Vegetables", "Dairy", "Snacks", "Drinks", "Frozen", "Leftovers"])
-    expiry    = st.date_input("Expiry Date", value=date.today())
+# ==============================================================================
+# 3. STREAMLIT FRONTEND USER INTERFACE & DESIGN PATTERNS
+# ==============================================================================
 
-    if food_name.strip():
-        preview = detect_emoji(food_name, category)
-        st.markdown(f"<div style='font-size:0.82rem;color:#888;margin-top:-0.4rem;'>Detected emoji: {preview}</div>", unsafe_allow_html=True)
+st.set_page_config(page_title="FridgeBuddy 🥕", page_icon="🥕", layout="centered")
 
-    if st.button("Add to Fridge", use_container_width=True):
-        if not food_name.strip():
-            st.error("Please enter a food name!")
-        else:
-            emoji = detect_emoji(food_name.strip(), category)
-            new_item = {
-                "id": str(int(time.time() * 1000)),
-                "name": food_name.strip(),
-                "category": category,
-                "emoji": emoji,
-                "expiry_date": expiry.isoformat(),
-            }
-            st.session_state.foods.append(new_item)
-            st.session_state.toast = f"Added {emoji} {food_name.strip()} to your fridge!"
-            st.rerun()
-
-    if st.session_state.toast:
-        st.success(st.session_state.toast)
-        st.session_state.toast = None
-
-    st.divider()
-    st.markdown(
-        "<div style='font-size:0.78rem;color:#aaa;text-align:center;'>"
-        "Made with 💚 for college students<br>who forget about their food 😅"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-
-# ─────────────────────────────────────────────
-# MAIN DASHBOARD
-# ─────────────────────────────────────────────
-foods        = st.session_state.foods
-sorted_foods = sort_by_expiry(foods)
-stats        = compute_stats(foods)
-
-# Header
+# FIXES: Switched to dynamic colors using CSS variables so dark/light mode switches don't break readability!
 st.markdown("""
-<div style='text-align:center; padding:1rem 0 0.5rem;'>
-  <h1 style='font-size:2.8rem; font-weight:900; margin:0; letter-spacing:-1px;'>FridgeBuddy 🥕</h1>
-  <p style='font-size:1rem; color:#888; font-weight:600; margin-top:0.3rem;'>
-    your friendly fridge assistant — keeping your food (and your wallet) alive ✨
-  </p>
-</div>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Nunito', sans-serif;
+    }
+    
+    /* Dynamic Theme-Aware Headings */
+    .main-title {
+        text-align: center;
+        color: #4E9F75;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+    .sub-title {
+        text-align: center;
+        color: #7A9E7E;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+    
+    /* Dynamic Cards that respect text color settings */
+    .food-card {
+        background-color: rgba(163, 201, 168, 0.15);
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 5px solid #A3C9A8;
+        margin-bottom: 10px;
+        color: var(--text-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .food-card-expired {
+        background-color: rgba(255, 138, 138, 0.15);
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 5px solid #FF8A8A;
+        margin-bottom: 10px;
+        color: var(--text-color);
+    }
+    .food-card-urgent {
+        background-color: rgba(255, 208, 123, 0.15);
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 5px solid #FFD07B;
+        margin-bottom: 10px;
+        color: var(--text-color);
+    }
+    
+    /* Mascot card text fix */
+    .mascot-box {
+        background-color: rgba(230, 161, 92, 0.1);
+        padding: 20px;
+        border-radius: 16px;
+        border: 2px dashed #E6A15C;
+        text-align: center;
+        margin-top: 25px;
+    }
+    .mascot-text {
+        font-style: italic; 
+        color: var(--text-color);
+        font-weight: 600; 
+        font-size: 1.05rem;
+    }
+    
+    /* Force sidebar labels to remain fully visible */
+    [data-testid="stSidebar"] label p {
+        color: var(--text-color) !important;
+        font-weight: 600;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-st.divider()
+# Main Dashboard Typography Headers
+st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allowed_html=True)
+st.markdown("<p class='sub-title'>Your friendly fridge assistant — keeping your food (and your wallet) alive ✨</p>", unsafe_allowed_html=True)
 
-# Metrics
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("📦 Total Items",     stats["total"])
-c2.metric("🔥 Expiring Soon",   len(stats["expiring_soon"]))
-c3.metric("💀 Already Expired", len(stats["expired"]))
-c4.metric("♻️ Waste Prevented", f"{stats['waste_prevented']} items")
+# SIDEBAR OPERATIONS PANEL
+st.sidebar.markdown("### 📥 Restock Your Fridge")
 
-st.markdown("<br>", unsafe_allow_html=True)
+CATEGORIES = {
+    "Fruits 🍎": "🍎",
+    "Vegetables 🥦": "🥦",
+    "Dairy 🥛": "🥛",
+    "Snacks 🍪": "🍪",
+    "Drinks 🧃": "🧃",
+    "Frozen ❄️": "❄️",
+    "Leftovers 🍱": "🍱"
+}
 
-# Alert zone
-critical_items = [f for f in sorted_foods if get_urgency(days_left(f.get("expiry_date", ""))) == "critical"]
-if critical_items:
-    alert_rows = "".join([
-        f"<div style='display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;font-weight:700;color:#7a5500;'>"
-        f"<span style='font-size:1.3rem;'>{f['emoji']}</span>"
-        f"<span>{f['name']}</span>"
-        f"<span style='font-size:0.85rem;color:#9a6f00;'>— {get_status_label(days_left(f['expiry_date']))}</span>"
-        f"</div>"
-        for f in critical_items
-    ])
-    st.markdown(f"""
-    <div style='background:linear-gradient(135deg,#fff8e1,#ffe8e3);border:2.5px solid #ffd97d;
-                border-radius:18px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;
-                box-shadow:0 4px 18px rgba(255,180,0,0.12);'>
-      <div style='font-size:1rem;font-weight:800;color:#9a6f00;margin-bottom:0.7rem;'>
-        🚨 Eat These NOW — Expiring Within 2 Days!
-      </div>
-      {alert_rows}
-    </div>
-    """, unsafe_allow_html=True)
+with st.sidebar.form(key="add_food_form", clear_on_submit=True):
+    food_name = st.text_input("Food Name", placeholder="e.g. Greek yogurt, Apples...")
+    category_selection = st.selectbox("Category", list(CATEGORIES.keys()))
+    expiry_date = st.date_input("Expiry Date", datetime.today().date())
+    
+    submit_button = st.form_submit_button(label="Add to Fridge")
 
-# Food list
+if submit_button:
+    if food_name.strip() == "":
+        st.sidebar.warning("Please type a food name first!")
+    else:
+        default_cat_emoji = CATEGORIES[category_selection]
+        chosen_emoji = auto_detect_emoji(food_name, default_cat_emoji)
+        
+        add_food_item(food_name.strip(), expiry_date, category_selection, chosen_emoji)
+        st.sidebar.success(f"Added {food_name} successfully!")
+        st.rerun()
+
+# LIVE RE-EVALUATION DATA FLOW PIPELINE
+raw_foods = load_foods()
+processed_foods = process_and_sort_fridge(raw_foods)
+
+expired_list = [f for f in processed_foods if f["days_left"] < 0]
+urgent_list = [f for f in processed_foods if 0 <= f["days_left"] <= 2]
+
+# 🚨 VIEW CONTEXT ZONE A: EXPIRING SOON & EXPIRED HIGHLIGHTS
+if expired_list or urgent_list:
+    st.markdown("### 🚨 Urgent Attention Required")
+    
+    for item in expired_list:
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(f"""
+            <div class="food-card-expired">
+                <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
+                <span style="color:#FF8A8A; font-size:0.9rem; font-weight:bold;">⚠️ EXPIRED ({abs(item['days_left'])} days ago) • {item['category']}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.write("")  
+            if st.button("🗑️ Toss", key=f"exp_{item['id']}"):
+                delete_food_item(item['id'])
+                st.rerun()
+                
+    for item in urgent_list:
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            days_str = "TODAY" if item['days_left'] == 0 else "TOMORROW" if item['days_left'] == 1 else "in 2 days"
+            st.markdown(f"""
+            <div class="food-card-urgent">
+                <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
+                <span style="color:#FFD07B; font-size:0.9rem; font-weight:bold;">⏱️ Expires {days_str} • {item['category']}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.write("")
+            if st.button("🍽️ Eat", key=f"urg_{item['id']}"):
+                delete_food_item(item['id'])
+                st.rerun()
+                
+    st.markdown("---")
+
+# 🗄️ VIEW CONTEXT ZONE B: MAIN FRIDGE INVENTORY CONTENT VIEW
 st.markdown("### 🧊 Your Fridge")
-
-if not sorted_foods:
+if not processed_foods:
+    # Stylized clean fallback state matching your original empty container design
     st.markdown("""
-    <div style='text-align:center;padding:3rem 2rem;background:#f9f9f9;
-                border-radius:18px;border:2px dashed #ccc;color:#aaa;font-size:1rem;'>
-      <div style='font-size:3rem;'>🫙</div>
-      <strong style='color:#888;display:block;margin:0.5rem 0;'>Your fridge is empty!</strong>
-      Add your first item using the sidebar →
+    <div style="text-align:center; padding: 40px; background-color: rgba(255,255,255,0.05); border-radius:12px; margin-top:10px;">
+        <div style="font-size:3rem; margin-bottom:15px;">🫙</div>
+        <h4 style="margin:0; font-weight:600;">Your fridge is empty!</h4>
+        <p style="color:gray; margin-top:5px;">Add your first item using the sidebar &rarr;</p>
     </div>
     """, unsafe_allow_html=True)
 else:
-    for item in sorted_foods:
-        d       = days_left(item.get("expiry_date", ""))
-        urgency = get_urgency(d)
-        status  = get_status_label(d)
-        card_style = CARD_STYLE.get(urgency, CARD_STYLE["ok"])
-
-        col_card, col_btn = st.columns([7, 1])
-        with col_card:
+    for item in processed_foods:
+        if item['days_left'] <= 2:
+            continue
+            
+        col1, col2 = st.columns([4, 1])
+        with col1:
             st.markdown(f"""
-            <div style='{card_style} border-radius:14px; padding:0.8rem 1.2rem;
-                        box-shadow:0 2px 8px rgba(0,0,0,0.04);
-                        display:flex; align-items:center; justify-content:space-between;
-                        flex-wrap:wrap; gap:0.4rem;'>
-              <div style='display:flex;align-items:center;gap:0.6rem;'>
-                <span style='font-size:1.5rem;'>{item['emoji']}</span>
-                <strong style='font-size:1rem;'>{item['name']}</strong>
-                <span style='font-size:0.75rem;background:#f0f0f0;border-radius:20px;
-                             padding:2px 10px;color:#777;font-weight:700;'>{item['category']}</span>
-              </div>
-              <div style='font-size:0.88rem;font-weight:700;color:#666;'>{status}</div>
+            <div class="food-card">
+                <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
+                <span style="opacity:0.8; font-size:0.9rem;">🗓️ {item['days_left']} days remaining • {item['category']}</span>
             </div>
             """, unsafe_allow_html=True)
-
-        with col_btn:
-            if st.button("🗑️", key=f"del_{item['id']}", help="Eat / Delete"):
-                st.session_state.foods = [f for f in st.session_state.foods if f["id"] != item["id"]]
+        with col2:
+            st.write("")
+            if st.button("✅ Done", key=f"all_{item['id']}"):
+                delete_food_item(item['id'])
                 st.rerun()
 
-# Mascot section
-st.divider()
-st.markdown("### 🥕 Carrot Says...")
+# 🤖 VIEW CONTEXT ZONE C: MASCOT & ANALYTICAL METRIC DASHBOARDS
+st.markdown("### 📊 Fridge Vital Stats")
 
-mascot = get_mascot(stats)
-box_style, text_color = MOOD_STYLE.get(mascot["mood"], MOOD_STYLE["happy"])
+total_items = len(processed_foods)
+danger_count = len(urgent_list) + len(expired_list)
+waste_prevented = total_items * 3 
 
+stat1, stat2, stat3 = st.columns(3)
+stat1.metric("Total Items", total_items)
+stat2.metric("Expiring/Expired", danger_count, delta=f"{danger_count} items", delta_color="inverse")
+stat3.metric("Waste Avoided", f"{waste_prevented} items")
+
+feedback_message = get_mascot_feedback(processed_foods)
 st.markdown(f"""
-<div style='{box_style} border-radius:18px; padding:1.5rem 2rem;
-            display:flex; align-items:flex-start; gap:1.2rem;
-            box-shadow:0 4px 16px rgba(0,0,0,0.06);'>
-  <div style='font-size:3.2rem; line-height:1; flex-shrink:0;'>{mascot['face']}</div>
-  <div>
-    <p style='font-size:1rem; font-weight:700; margin:0 0 0.5rem; color:{text_color};'>
-      {mascot['msg']}
-    </p>
-    <p style='font-size:0.85rem; color:#888; margin:0; font-style:italic; font-weight:600;'>
-      💡 {mascot['tip']}
-    </p>
-  </div>
+<div class="mascot-box">
+    <div style="font-size: 2.5rem; margin-bottom: 5px;">🥕</div>
+    <div class="mascot-text">
+        "{feedback_message}"
+    </div>
 </div>
 """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
