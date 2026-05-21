@@ -212,6 +212,12 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
+/* ── Force Sidebar Toggle Button to be Visible ── */
+[data-testid="stSidebarCollapseButton"] button svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+
 /* Apply font scaling universally without smashing original input elements */
 html, body, [class*="css"] {
     font-family: 'Nunito', sans-serif !important;
