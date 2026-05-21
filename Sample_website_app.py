@@ -7,8 +7,8 @@ Run with:  streamlit run app.py
 import streamlit as st
 from datetime import date
 
-from Sample_website_Storage import load_foods, add_food, delete_food
-from Sample_website_food_utils import calculate_days_left
+from sample_website_storage import load_foods, add_food, delete_food
+from sample_website_food_utils import calculate_days_left
 from sample_website_mascot import get_mascot_message
 
 
