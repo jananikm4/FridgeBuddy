@@ -206,13 +206,12 @@ def get_mood_emoji(mood: str) -> str:
     return {"happy": "😄", "worried": "😰", "sad": "😢", "chaos": "🤯"}.get(mood, "🥕")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# REFACTOR INTERACTIVE LAYOUT, DYNAMIC TRANSITIONS & SIDEBAR FIXES
+# REFACTOR INTERACTIVE LAYOUT & FIXED SIDEBAR NAVIGATION SNAPPING CSS
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-/* Apply custom font mapping without overriding native input rendering states */
 html, body, [class*="css"] {
     font-family: 'Nunito', sans-serif !important;
 }
@@ -220,31 +219,22 @@ html, body, [class*="css"] {
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem !important; }
 
-/* ── Fix Streamlit Sidebar Toggle Buttons Visibility ── */
+/* ── FOOLPROOF SIDEBAR EXPAND/COLLAPSE ACCENTS ── */
 [data-testid="stSidebarCollapseButton"] button, 
-[data-testid="collapsedControl"] button {
+[data-testid="collapsedControl"] {
     background-color: #8fbc8f !important;
     border: 1px solid #c8e6c8 !important;
-    border-radius: 50% !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-    z-index: 999999 !important;
-    transition: transform 0.2s ease !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
 }
-[data-testid="stSidebarCollapseButton"] button:hover, 
-[data-testid="collapsedControl"] button:hover {
-    transform: scale(1.08) !important;
-}
+
 [data-testid="stSidebarCollapseButton"] svg, 
 [data-testid="collapsedControl"] svg {
     fill: #ffffff !important;
     color: #ffffff !important;
-    width: 20px !important;
-    height: 20px !important;
 }
 
 /* ── Clear, High Contrast Metric Blocks ── */
@@ -399,13 +389,13 @@ st.markdown("<br>", unsafe_allow_html=True)
 critical_items = [f for f in sorted_foods if get_urgency_level(days_left(f.get("expiry_date", ""))) == "critical"]
 if critical_items:
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #fff8e1, #ffe8e3); border: 2.5px solid #ffd97d; border-radius: 18px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 18px rgba(255,180,0,0.15);">
+    <div style="background: linear-gradient(135deg, #fff8e1, #ffe8e3); border: 2.5px solid #ffd97d; border-radius: 18px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 18px rgba(255,180,0,0.15); color: #2c3e50 !important;">
         <h3 style="margin:0 0 0.6rem 0; color:#b8860b; font-size:1.2rem;">🚨 Eat These NOW — Expiring Within 2 Days!</h3>
     """, unsafe_allow_html=True)
     for item in critical_items:
         days = days_left(item.get("expiry_date", ""))
         status = get_status_label(days)
-        st.markdown(f"<div style='display:flex; align-items:center; gap:0.6rem; margin-bottom:0.3rem; font-size:1rem; font-weight:700;'><span style='font-size:1.4rem;'>{item.get('emoji','🍽️')}</span><span>{item['name']}</span><span style='color:#b8860b; font-weight:600;'>— {status}</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='display:flex; align-items:center; gap:0.6rem; margin-bottom:0.3rem; font-size:1rem; font-weight:700; color: #2c3e50 !important;'><span style='font-size:1.4rem;'>{item.get('emoji','🍽️')}</span><span>{item['name']}</span><span style='color:#b8860b; font-weight:600;'>— {status}</span></div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Main Inventory Section
