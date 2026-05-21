@@ -7,9 +7,9 @@ Run with:  streamlit run app.py
 import streamlit as st
 from datetime import date
 
-from storage import load_foods, add_food, delete_food
-from food_utils import days_left, get_status_label, get_urgency_level, sort_by_expiry, detect_emoji, compute_stats
-from mascot_messages import get_mascot_message, get_mood_emoji
+from Sample_website_Storage import load_foods, add_food, delete_food
+from Sample_website_food_utils import calculate_days_left
+from sample_website_mascot import get_mascot_message
 
 
 # ══════════════════════════════════════════════════════════════════════════════
