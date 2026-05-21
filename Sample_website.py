@@ -122,7 +122,7 @@ def get_mascot_feedback(processed_foods):
 
 st.set_page_config(page_title="FridgeBuddy 🥕", page_icon="🥕", layout="centered")
 
-# FIXES: Switched to dynamic colors using CSS variables so dark/light mode switches don't break readability!
+# Custom Injectable Styling Layers via Markdown block configuration
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
@@ -196,9 +196,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Main Dashboard Typography Headers
-st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allowed_html=True)
-st.markdown("<p class='sub-title'>Your friendly fridge assistant — keeping your food (and your wallet) alive ✨</p>", unsafe_allowed_html=True)
+# Main Dashboard Typography Headers - FIXED BOTH LINES BELOW NOW!
+st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>Your friendly fridge assistant — keeping your food (and your wallet) alive ✨</p>", unsafe_allow_html=True)
 
 # SIDEBAR OPERATIONS PANEL
 st.sidebar.markdown("### 📥 Restock Your Fridge")
@@ -278,7 +278,6 @@ if expired_list or urgent_list:
 # 🗄️ VIEW CONTEXT ZONE B: MAIN FRIDGE INVENTORY CONTENT VIEW
 st.markdown("### 🧊 Your Fridge")
 if not processed_foods:
-    # Stylized clean fallback state matching your original empty container design
     st.markdown("""
     <div style="text-align:center; padding: 40px; background-color: rgba(255,255,255,0.05); border-radius:12px; margin-top:10px;">
         <div style="font-size:3rem; margin-bottom:15px;">🫙</div>
