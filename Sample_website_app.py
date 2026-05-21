@@ -206,78 +206,76 @@ def get_mood_emoji(mood: str) -> str:
     return {"happy": "😄", "worried": "😰", "sad": "😢", "chaos": "🤯"}.get(mood, "🥕")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# GLOBAL PASTEL CSS STYLE INJECTION (Forced Contrast Theme)
+# REFACTOR INTERACTIVE LAYOUT & SMOOTH TRANSITIONS CSS
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-:root {
-    --sage:      #8fbc8f; 
-    --sage-lt:   #c8e6c8; 
-    --sage-bg:   #f0f7f0; 
-    --cream:     #fdf9f3; 
-    --text-dark: #3d3d3d !important; 
-    --text-mid:  #6b6b6b !important;
-    --radius:    14px;    
-    --shadow:    0 4px 16px rgba(0,0,0,0.07);
-}
-
-/* ── Force Visible Text Everywhere ── */
-html, body, [class*="css"], p, span, label, h1, h2, h3, div, small {
+/* Apply font scaling universally without smashing original input elements */
+html, body, [class*="css"] {
     font-family: 'Nunito', sans-serif !important;
-    color: #3d3d3d !important;
 }
 
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem !important; }
 
-/* ── Sidebar Styles ── */
-[data-testid="stSidebar"] { 
-    background-color: var(--sage-bg) !important; 
-    border-right: 2px solid var(--sage-lt) !important; 
+/* ── Clear, High Contrast Metric Blocks ── */
+[data-testid="stMetric"] {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 1.1rem 1.4rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #eeeeee !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
-[data-testid="stSidebar"] p, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] label {
-    color: #3d3d3d !important;
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08) !important;
 }
-[data-testid="stSidebar"] .stButton > button {
-    background: linear-gradient(135deg, var(--sage), #6aaa6a) !important; 
-    color: white !important;
-    font-weight: 800 !important; 
-    font-size: 1rem !important; 
-    border: none !important;
-    border-radius: var(--radius) !important; 
-    padding: 0.65rem 1.2rem !important; 
-    width: 100% !important;
-    box-shadow: 0 4px 12px rgba(143,188,143,0.4) !important;
-}
-
-/* ── Input Box Contrast Fixes ── */
-input, select, textarea, [data-baseweb="select"] *, div[data-baseweb="input"] { 
-    background-color: white !important;
-    color: #3d3d3d !important;
-    border-radius: 10px !important; 
-}
-
-.stButton > button { 
-    border-radius: 8px !important; 
-    border: 1.5px solid #e0e0e0 !important; 
+[data-testid="stMetricLabel"] { 
     font-weight: 700 !important; 
-    color: #3d3d3d !important;
+    color: #666666 !important; 
+}
+[data-testid="stMetricValue"] > div { 
+    font-weight: 900 !important; 
+    color: #222222 !important; 
 }
 
-/* ── Metric Cards ── */
-[data-testid="stMetric"] { 
-    background: white !important; 
-    border-radius: var(--radius) !important; 
-    padding: 1rem 1.25rem !important; 
-    box-shadow: var(--shadow) !important; 
-    border: 1.5px solid #ececec !important; 
+/* ── Custom Styled Form Fields ── */
+div[data-baseweb="input"], div[data-baseweb="select"] {
+    border-radius: 12px !important;
 }
-[data-testid="stMetricLabel"] { font-weight: 700 !important; color: var(--text-mid) !important; }
-[data-testid="stMetricValue"] div { font-weight: 900 !important; color: var(--text-dark) !important; }
 
-hr { border-color: var(--sage-lt) !important; }
+/* ── Fluid Interactive Buttons ── */
+.stButton > button {
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.stButton > button:hover {
+    border-color: #8fbc8f !important;
+    color: #8fbc8f !important;
+    background-color: #f0f7f0 !important;
+}
+
+/* ── Custom Sidebar Submit Button Accent ── */
+[data-testid="stSidebar"] .stButton > button {
+    background: linear-gradient(135deg, #8fbc8f, #6aaa6a) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 800 !important;
+    padding: 0.6rem 1.2rem !important;
+    box-shadow: 0 4px 14px rgba(143, 188, 143, 0.3) !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(143, 188, 143, 0.45) !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #99c799, #72b372) !important;
+}
+
+hr { border-color: #c8e6c8 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -287,21 +285,33 @@ def _card_style(urgency: str) -> tuple[str, str]:
         "expired":  ("#ffeaea", "#ff8a80"),
         "critical": ("#fff8e1", "#ffd97d"),
         "warning":  ("#f0f7f0", "#8fbc8f"),
-        "ok":       ("#fdf9f3", "#e0e0e0"),
-    }.get(urgency, ("#fdf9f3", "#e0e0e0"))
+        "ok":       ("#ffffff", "#eef2ee"),
+    }.get(urgency, ("#ffffff", "#eef2ee"))
 
 def render_food_card_html(item: dict, days: int | None) -> str:
     urgency = get_urgency_level(days)
     status  = get_status_label(days)
     bg, border = _card_style(urgency)
     return f"""
-    <div style="background: {bg}; border: 2px solid {border}; border-radius: 14px; padding: 0.75rem 1.1rem; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;">
-        <div>
-            <span style="font-size:1.5rem;">{item.get('emoji','🍽️')}</span>
-            <strong style="font-size:1.05rem; margin-left:0.4rem; color:#3d3d3d;">{item['name']}</strong>
-            <span style="font-size:0.78rem; background:#eee; border-radius:20px; padding:2px 10px; margin-left:0.5rem; color:#666;">{item.get('category','').split(' ')[0]}</span>
+    <div style="
+        background: {bg}; 
+        border: 2px solid {border}; 
+        border-radius: 16px; 
+        padding: 1rem 1.25rem; 
+        margin-bottom: 0.25rem; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02); 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        flex-wrap: wrap; 
+        gap: 0.5rem;
+    ">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span style="font-size:1.6rem; line-height: 1;">{item.get('emoji','🍽️')}</span>
+            <span style="font-size:1.1rem; font-weight:800; color:#2c3e50;">{item['name']}</span>
+            <span style="font-size:0.75rem; font-weight:700; background:#f1f2f6; border-radius:20px; padding:3px 12px; color:#57606f;">{item.get('category','').split(' ')[0]}</span>
         </div>
-        <div style="font-size:0.9rem; font-weight:600; color:#3d3d3d;">{status}</div>
+        <div style="font-size:0.95rem; font-weight:700; color:#2c3e50;">{status}</div>
     </div>
     """
 
@@ -320,7 +330,7 @@ with st.sidebar:
 
     if food_name.strip():
         detected = detect_emoji(food_name, category)
-        st.markdown(f"<div style='font-size:0.85rem; color:#666; margin-top:-0.5rem;'>Detected emoji: {detected}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:0.85rem; padding-left: 2px; color:#666; margin-top:-0.5rem;'>Detected emoji: {detected}</div>", unsafe_allow_html=True)
 
     add_clicked = st.button("🥗 Add to Fridge", use_container_width=True)
     if add_clicked:
@@ -333,7 +343,7 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.markdown("<div style='font-size:0.8rem; color:#666; text-align:center;'>Made with 💚 for college students<br>who forget about their food 😅</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:0.8rem; color:#888; text-align:center;'>Made with 💚 for college students<br>who forget about their food 😅</div>", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN VIEWBOARD DASHBOARD
@@ -343,9 +353,9 @@ sorted_foods = sort_by_expiry(foods)
 stats = compute_stats(foods)
 
 st.markdown("""
-<div style="text-align:center; padding: 1.5rem 0 0.5rem 0;">
-    <h1 style="font-size:3rem; font-weight:900; margin:0; letter-spacing:-1px; color:#3d3d3d;">FridgeBuddy 🥕</h1>
-    <p style="font-size:1.1rem; color:#666; margin-top:0.2rem; font-weight:600;">your friendly fridge assistant — keeping your food (and your wallet) alive ✨</p>
+<div style="text-align:center; padding: 1rem 0 0.5rem 0;">
+    <h1 style="font-size:3rem; font-weight:900; margin:0; letter-spacing:-1px;">FridgeBuddy 🥕</h1>
+    <p style="font-size:1.1rem; color:#777777; margin-top:0.2rem; font-weight:600;">your friendly fridge assistant — keeping your food (and your wallet) alive ✨</p>
 </div>
 """, unsafe_allow_html=True)
 st.divider()
@@ -368,15 +378,15 @@ if critical_items:
     for item in critical_items:
         days = days_left(item.get("expiry_date", ""))
         status = get_status_label(days)
-        st.markdown(f"<div style='display:flex; align-items:center; gap:0.6rem; margin-bottom:0.3rem; font-size:1rem; font-weight:700; color:#3d3d3d;'><span style='font-size:1.4rem;'>{item.get('emoji','🍽️')}</span><span>{item['name']}</span><span style='color:#b8860b; font-weight:600;'>— {status}</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='display:flex; align-items:center; gap:0.6rem; margin-bottom:0.3rem; font-size:1rem; font-weight:700;'><span style='font-size:1.4rem;'>{item.get('emoji','🍽️')}</span><span>{item['name']}</span><span style='color:#b8860b; font-weight:600;'>— {status}</span></div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Main Inventory Section
 st.markdown("### 🧊 Your Fridge")
 if not sorted_foods:
     st.markdown("""
-    <div style="text-align:center; padding: 3rem 2rem; background: #f9f9f9; border-radius: 18px; border: 2px dashed #ccc; color: #aaa; font-size: 1.1rem;">
-        <div style="font-size:3rem;">🫙</div><strong style="color:#666;">Your fridge is empty!</strong><br><span style="color:#888;">Add your first item using the sidebar →</span>
+    <div style="text-align:center; padding: 3.5rem 2rem; background: rgba(255,255,255,0.4); border-radius: 20px; border: 2px dashed #dddddd; color: #888888; font-size: 1.1rem;">
+        <div style="font-size:3.5rem; margin-bottom: 0.5rem;">🫙</div><strong>Your fridge is empty!</strong><br><span style="color:#aaa; font-size:0.95rem;">Add your first item using the sidebar →</span>
     </div>
     """, unsafe_allow_html=True)
 else:
@@ -384,11 +394,13 @@ else:
         days = days_left(item.get("expiry_date", ""))
         st.markdown(render_food_card_html(item, days), unsafe_allow_html=True)
         
-        _, btn_col = st.columns([6, 1])
+        # Smooth right-aligned utility line
+        main_col, btn_col = st.columns([6, 1])
         with btn_col:
-            if st.button("🗑️ Eat/Delete", key=f"del_{item['id']}"):
+            if st.button("🗑️ Eat/Delete", key=f"del_{item['id']}", use_container_width=True):
                 delete_food(item["id"])
                 st.rerun()
+        st.markdown("<div style='margin-bottom: 0.6rem;'></div>", unsafe_allow_html=True)
 
 # Mascot Interaction Panel
 st.divider()
@@ -400,11 +412,11 @@ mood_colors = {"happy": ("#f0f7f0", "#8fbc8f"), "worried": ("#fff8e1", "#ffd97d"
 bg_color, border_color = mood_colors.get(mascot_data["mood"], ("#f9f9f9", "#ccc"))
 
 st.markdown(f"""
-<div style="background: {bg_color}; border: 2px solid {border_color}; border-radius: 18px; padding: 1.5rem 2rem; display: flex; align-items: flex-start; gap: 1.2rem; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+<div style="background: {bg_color}; border: 2px solid {border_color}; border-radius: 18px; padding: 1.5rem 2rem; display: flex; align-items: flex-start; gap: 1.2rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
     <div style="font-size: 3.5rem; line-height: 1;">{mood_emoji}</div>
     <div>
-        <p style="font-size:1.05rem; font-weight:700; margin:0 0 0.6rem 0; color:#3d3d3d;">{mascot_data['message']}</p>
-        <p style="font-size:0.88rem; color:#666; margin:0; font-style:italic;">{mascot_data['tip']}</p>
+        <p style="font-size:1.1rem; font-weight:800; margin:0 0 0.5rem 0; color:#2c3e50;">{mascot_data['message']}</p>
+        <p style="font-size:0.9rem; color:#7f8c8d; margin:0; font-style:italic;">{mascot_data['tip']}</p>
     </div>
 </div>
 """, unsafe_allow_html=True)
