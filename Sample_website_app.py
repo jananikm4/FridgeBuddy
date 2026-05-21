@@ -16,6 +16,16 @@ st.set_page_config(
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
+# COLOR PALETTE
+# ══════════════════════════════════════════════════════════════════════════════
+PUDDLE = "#6999A1"
+THISTLE = "#9295C0"
+LAVENDER = "#AB82A4"
+PINK = "#F06E95"
+CORAL = "#FC9390"
+PEACH = "#FEE3CA"
+
+# ══════════════════════════════════════════════════════════════════════════════
 # DATA STORAGE
 # ══════════════════════════════════════════════════════════════════════════════
 DATA_FILE = "fridge_data.json"
@@ -53,7 +63,7 @@ def delete_food(item_id: str):
     save_foods(st.session_state.fridge_inventory)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# LOGIC HELPERS
+# HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 def days_left(expiry_date_str: str) -> Optional[int]:
     try:
@@ -64,7 +74,7 @@ def days_left(expiry_date_str: str) -> Optional[int]:
 
 def get_status_label(days):
     if days is None:
-        return "⚠️ Unknown date"
+        return "⚠️ Unknown"
     if days < 0:
         return f"💀 Expired {abs(days)} day(s) ago"
     if days == 0:
@@ -72,11 +82,9 @@ def get_status_label(days):
     if days == 1:
         return "⚡ Expires TOMORROW"
     if days <= 2:
-        return f"😬 Expires in {days} days"
+        return f"😬 {days} days left"
     if days <= 5:
         return f"🟡 {days} days left"
-    if days <= 14:
-        return f"🟢 {days} days left"
 
     return f"✅ {days} days left"
 
@@ -89,6 +97,7 @@ def get_urgency_level(days):
         return "critical"
     if days <= 5:
         return "warning"
+
     return "ok"
 
 def sort_by_expiry(food_list):
@@ -103,7 +112,6 @@ def sort_by_expiry(food_list):
 EMOJI_MAP = {
     "apple": "🍎",
     "banana": "🍌",
-    "orange": "🍊",
     "milk": "🥛",
     "egg": "🥚",
     "bread": "🍞",
@@ -111,17 +119,13 @@ EMOJI_MAP = {
     "burger": "🍔",
     "rice": "🍚",
     "cake": "🎂",
-    "cookie": "🍪",
     "coffee": "☕",
     "tea": "🍵",
-    "chicken": "🍗",
-    "fish": "🐟",
     "carrot": "🥕",
     "broccoli": "🥦",
     "cheese": "🧀",
-    "ice cream": "🍦",
-    "noodle": "🍜",
     "pasta": "🍝",
+    "noodle": "🍜",
 }
 
 CATEGORY_DEFAULT_EMOJI = {
@@ -171,7 +175,6 @@ def compute_stats(food_list):
 # ══════════════════════════════════════════════════════════════════════════════
 def suggest_recipe(items):
     names = [i["name"].lower() for i in items]
-
     joined = " ".join(names)
 
     if "egg" in joined:
@@ -181,85 +184,166 @@ def suggest_recipe(items):
     if "milk" in joined and "banana" in joined:
         return "🥤 Smoothie arc unlocked."
     if "rice" in joined:
-        return "🍚 Fried rice would absolutely slap right now."
+        return "🍚 Fried rice would slap right now."
 
     return "🍲 Mystery meal challenge activated."
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MASCOT
+# MASCOT MESSAGES
 # ══════════════════════════════════════════════════════════════════════════════
-MESSAGES = [
+GOOD_MESSAGES = [
     "Your fridge is thriving ✨",
     "No food casualties detected 🫡",
-    "Your groceries feel safe here.",
     "This fridge has emotional stability.",
 ]
 
 PANIC_MESSAGES = [
-    "PLEASE eat the food before it evolves sentience 😭",
-    "Your yogurt is entering its villain arc.",
+    "Your yogurt is entering its villain arc 😭",
     "The spinach is fighting for its life.",
-    "This is a refrigerator, not a museum exhibit.",
+    "Please eat something before it develops consciousness.",
 ]
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CSS
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown("""
+st.markdown(f"""
 <style>
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-html, body, [class*="css"] {
+html, body, [class*="css"] {{
     font-family: 'Nunito', sans-serif;
-}
+    color: #2f2f2f !important;
+}}
 
-#MainMenu, footer {
+#MainMenu, footer {{
     visibility: hidden;
-}
+}}
 
-.stApp {
-    background: linear-gradient(-45deg, #f7fff7, #f0fff4, #fffaf0, #f8f9ff);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-}
+.stApp {{
+    background: linear-gradient(
+        135deg,
+        {PEACH},
+        #fff7f2,
+        #fef3ff
+    );
+}}
 
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.block-container {
+.block-container {{
     padding-top: 2rem;
-}
+}}
 
-[data-testid="stMetric"] {
-    background: white;
-    border-radius: 18px;
-    padding: 1rem;
-    border: 1px solid #efefef;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-}
+h1, h2, h3, h4, h5, h6 {{
+    color: #3b3b3b !important;
+}}
 
-.stButton > button {
-    border-radius: 12px;
-    font-weight: 700;
+p, label, span, div {{
+    color: #444 !important;
+}}
+
+section[data-testid="stSidebar"] {{
+    background: linear-gradient(
+        180deg,
+        {PUDDLE},
+        {THISTLE}
+    );
+}}
+
+section[data-testid="stSidebar"] * {{
+    color: white !important;
+}}
+
+.stTextInput input,
+.stSelectbox div[data-baseweb="select"],
+.stDateInput input {{
+    background: white !important;
+    color: #333 !important;
+    border-radius: 14px !important;
+    border: 2px solid #eee !important;
+}}
+
+.stButton > button {{
+    background: linear-gradient(
+        135deg,
+        {PINK},
+        {CORAL}
+    ) !important;
+
+    color: white !important;
+    border: none !important;
+    border-radius: 14px !important;
+    font-weight: 800 !important;
     transition: 0.2s ease;
-}
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}}
 
-.stButton > button:hover {
+.stButton > button:hover {{
     transform: translateY(-2px);
-}
+    filter: brightness(1.05);
+}}
 
-.food-card {
-    background: white;
+[data-testid="stMetric"] {{
+    background: rgba(255,255,255,0.8);
+    border: 2px solid rgba(255,255,255,0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
     padding: 1rem;
-    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}}
+
+[data-testid="stMetricLabel"] {{
+    color: #555 !important;
+    font-weight: 700;
+}}
+
+[data-testid="stMetricValue"] {{
+    color: #2f2f2f !important;
+    font-weight: 900;
+}}
+
+.food-card {{
+    border-radius: 24px;
+    padding: 1.2rem;
     margin-bottom: 1rem;
-    border: 1px solid #efefef;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-}
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.5);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}}
+
+.recipe-box {{
+    background: linear-gradient(
+        135deg,
+        {LAVENDER},
+        {THISTLE}
+    );
+
+    color: white !important;
+    padding: 1.2rem;
+    border-radius: 20px;
+    font-weight: 700;
+}}
+
+.recipe-box * {{
+    color: white !important;
+}}
+
+.mascot-box {{
+    background: linear-gradient(
+        135deg,
+        {PINK},
+        {CORAL}
+    );
+
+    color: white !important;
+    padding: 1.5rem;
+    border-radius: 24px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+}}
+
+.mascot-box * {{
+    color: white !important;
+}}
 
 </style>
 """, unsafe_allow_html=True)
@@ -324,16 +408,28 @@ foods = load_foods()
 sorted_foods = sort_by_expiry(foods)
 stats = compute_stats(sorted_foods)
 
-st.markdown("""
-<div style='text-align:center'>
-<h1 style='font-size:4rem;'>🥕 FridgeBuddy</h1>
-<p style='font-size:1.2rem;color:gray'>
+st.markdown(f"""
+<div style='text-align:center; margin-bottom:2rem;'>
+
+<h1 style='
+font-size:4.5rem;
+font-weight:900;
+color:{PUDDLE};
+margin-bottom:0;
+'>
+🥕 FridgeBuddy
+</h1>
+
+<p style='
+font-size:1.2rem;
+color:#555;
+margin-top:0.4rem;
+'>
 keeping your food alive one panic notification at a time
 </p>
+
 </div>
 """, unsafe_allow_html=True)
-
-st.divider()
 
 # ══════════════════════════════════════════════════════════════════════════════
 # METRICS
@@ -377,7 +473,7 @@ if search:
     ]
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CLEAR EXPIRED
+# DELETE EXPIRED
 # ══════════════════════════════════════════════════════════════════════════════
 if stats["expired"]:
 
@@ -399,11 +495,19 @@ st.subheader("🧊 Your Fridge")
 
 if not sorted_foods:
 
-    st.markdown("""
-    <div class='food-card' style='text-align:center;padding:3rem'>
-    <h1>🫙</h1>
-    <h3>Your fridge is empty.</h3>
-    <p>Add food from the sidebar →</p>
+    st.markdown(f"""
+    <div class='food-card' style='text-align:center;padding:4rem;'>
+
+    <div style='font-size:5rem;'>🫙</div>
+
+    <h2 style='color:{PUDDLE};'>
+    Your fridge is empty
+    </h2>
+
+    <p>
+    Add your first item from the sidebar →
+    </p>
+
     </div>
     """, unsafe_allow_html=True)
 
@@ -416,26 +520,28 @@ else:
 
         urgency = get_urgency_level(days)
 
-        color = {
-            "expired": "#ffe5e5",
-            "critical": "#fff4d6",
-            "warning": "#f7ffe0",
-            "ok": "#ffffff"
+        bg = {
+            "expired": "#ffe5eb",
+            "critical": "#fff0e4",
+            "warning": "#fff7ea",
+            "ok": "rgba(255,255,255,0.75)"
         }[urgency]
 
         st.markdown(f"""
-        <div class='food-card' style='background:{color}'>
-            <h3>
-                {item['emoji']} {item['name']}
-            </h3>
+        <div class='food-card' style='background:{bg};'>
 
-            <p>
-                <strong>{status}</strong>
-            </p>
+        <h3>
+        {item['emoji']} {item['name']}
+        </h3>
 
-            <p style='color:gray'>
-                {item['category']}
-            </p>
+        <p style='font-weight:700;'>
+        {status}
+        </p>
+
+        <p style='color:#777;'>
+        {item['category']}
+        </p>
+
         </div>
         """, unsafe_allow_html=True)
 
@@ -457,24 +563,43 @@ else:
 # ══════════════════════════════════════════════════════════════════════════════
 # RECIPE IDEA
 # ══════════════════════════════════════════════════════════════════════════════
-st.divider()
+st.markdown("<br>", unsafe_allow_html=True)
 
 st.subheader("👨‍🍳 FridgeBuddy Recipe Suggestion")
 
 recipe = suggest_recipe(sorted_foods)
 
-st.info(recipe)
+st.markdown(f"""
+<div class='recipe-box'>
+{recipe}
+</div>
+""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MASCOT
 # ══════════════════════════════════════════════════════════════════════════════
-st.divider()
+st.markdown("<br>", unsafe_allow_html=True)
 
 st.subheader("🥕 Carrot Says")
 
-if len(stats["expired"]) > 0 or len(stats["expiring"]) > 2:
-    st.warning(random.choice(PANIC_MESSAGES))
-else:
-    st.success(random.choice(MESSAGES))
+message = (
+    random.choice(PANIC_MESSAGES)
+    if len(stats["expired"]) > 0 or len(stats["expiring"]) > 2
+    else random.choice(GOOD_MESSAGES)
+)
+
+st.markdown(f"""
+<div class='mascot-box'>
+
+<h3 style='margin-top:0;'>
+🥕 FridgeBuddy has thoughts...
+</h3>
+
+<p style='font-size:1.05rem; margin-bottom:0;'>
+{message}
+</p>
+
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("<br><br>", unsafe_allow_html=True)
