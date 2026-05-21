@@ -8,13 +8,11 @@ from datetime import datetime
 # 1. TECHNICAL ARCHITECTURE & DATA STORAGE CONFIGURATION
 # ==============================================================================
 
-# Relative storage path setup ensures it works on local machines & Streamlit Cloud
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 FILE_PATH = os.path.join(DATA_DIR, "foods.json")
 
 def initialize_storage():
-    """Safely creates data directory and blank JSON file on execution."""
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
     if not os.path.exists(FILE_PATH):
@@ -22,7 +20,6 @@ def initialize_storage():
             json.dump([], f)
 
 def load_foods():
-    """Loads current virtual fridge contents from local storage database."""
     initialize_storage()
     try:
         with open(FILE_PATH, "r") as f:
@@ -31,13 +28,11 @@ def load_foods():
         return []
 
 def save_foods(foods):
-    """Saves updated dictionary array payload to database."""
     initialize_storage()
     with open(FILE_PATH, "w") as f:
         json.dump(foods, f, indent=4)
 
 def add_food_item(name, expiry_date, category, emoji):
-    """Appends an incoming grocery asset item with a unique tracking identification key."""
     foods = load_foods()
     new_id = max([item.get("id", 0) for item in foods], default=0) + 1
     new_item = {
@@ -51,7 +46,6 @@ def add_food_item(name, expiry_date, category, emoji):
     save_foods(foods)
 
 def delete_food_item(item_id):
-    """Removes tracked item by primary ID key instantly upon click event callback."""
     foods = load_foods()
     updated_foods = [item for item in foods if item.get("id") != item_id]
     save_foods(updated_foods)
@@ -71,7 +65,6 @@ EMOJI_DICTIONARY = {
 }
 
 def auto_detect_emoji(food_name, category_emoji):
-    """Contextual matching engine assigning individual custom icons based on keyword matching."""
     cleaned_name = food_name.lower().strip()
     for keyword, emoji in EMOJI_DICTIONARY.items():
         if keyword in cleaned_name:
@@ -79,7 +72,6 @@ def auto_detect_emoji(food_name, category_emoji):
     return category_emoji
 
 def process_and_sort_fridge(foods_list):
-    """Performs live date calculation routines and sorts closest expiration values first."""
     today = datetime.today().date()
     processed_list = []
     
@@ -93,7 +85,6 @@ def process_and_sort_fridge(foods_list):
     return sorted(processed_list, key=lambda x: x["days_left"])
 
 def get_mascot_feedback(processed_foods):
-    """Core algorithmic personality state selector generating chaotic/supportive micro-copy."""
     if not processed_foods:
         return "🧹 Your fridge is completely empty. Did you move out? Time to restock! 🛒"
         
@@ -131,7 +122,7 @@ def get_mascot_feedback(processed_foods):
 
 st.set_page_config(page_title="FridgeBuddy 🥕", page_icon="🥕", layout="centered")
 
-# Custom Injectable Styling Layers via Markdown block configuration (Fixed Parameter here)
+# FIXES: Switched to dynamic colors using CSS variables so dark/light mode switches don't break readability!
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
@@ -139,9 +130,11 @@ st.markdown("""
     html, body, [class*="css"] {
         font-family: 'Nunito', sans-serif;
     }
+    
+    /* Dynamic Theme-Aware Headings */
     .main-title {
         text-align: center;
-        color: #2E5A44;
+        color: #4E9F75;
         font-weight: 800;
         margin-bottom: 5px;
     }
@@ -151,42 +144,61 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 30px;
     }
+    
+    /* Dynamic Cards that respect text color settings */
     .food-card {
-        background-color: #F7F9F6;
+        background-color: rgba(163, 201, 168, 0.15);
         padding: 15px;
         border-radius: 12px;
         border-left: 5px solid #A3C9A8;
         margin-bottom: 10px;
+        color: var(--text-color);
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
     .food-card-expired {
-        background-color: #FFF2F2;
+        background-color: rgba(255, 138, 138, 0.15);
         padding: 15px;
         border-radius: 12px;
         border-left: 5px solid #FF8A8A;
         margin-bottom: 10px;
+        color: var(--text-color);
     }
     .food-card-urgent {
-        background-color: #FFF9E6;
+        background-color: rgba(255, 208, 123, 0.15);
         padding: 15px;
         border-radius: 12px;
         border-left: 5px solid #FFD07B;
         margin-bottom: 10px;
+        color: var(--text-color);
     }
+    
+    /* Mascot card text fix */
     .mascot-box {
-        background-color: #FDF6EE;
+        background-color: rgba(230, 161, 92, 0.1);
         padding: 20px;
         border-radius: 16px;
         border: 2px dashed #E6A15C;
         text-align: center;
         margin-top: 25px;
     }
+    .mascot-text {
+        font-style: italic; 
+        color: var(--text-color);
+        font-weight: 600; 
+        font-size: 1.05rem;
+    }
+    
+    /* Force sidebar labels to remain fully visible */
+    [data-testid="stSidebar"] label p {
+        color: var(--text-color) !important;
+        font-weight: 600;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # Main Dashboard Typography Headers
-st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>Your cute little fridge assistant to stop wasting groceries</p>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allowed_html=True)
+st.markdown("<p class='sub-title'>Your friendly fridge assistant — keeping your food (and your wallet) alive ✨</p>", unsafe_allowed_html=True)
 
 # SIDEBAR OPERATIONS PANEL
 st.sidebar.markdown("### 📥 Restock Your Fridge")
@@ -202,11 +214,11 @@ CATEGORIES = {
 }
 
 with st.sidebar.form(key="add_food_form", clear_on_submit=True):
-    food_name = st.text_input("What did you buy?", placeholder="e.g., Greek Yogurt, Strawberries")
+    food_name = st.text_input("Food Name", placeholder="e.g. Greek yogurt, Apples...")
     category_selection = st.selectbox("Category", list(CATEGORIES.keys()))
     expiry_date = st.date_input("Expiry Date", datetime.today().date())
     
-    submit_button = st.form_submit_button(label="Add to Fridge ✨")
+    submit_button = st.form_submit_button(label="Add to Fridge")
 
 if submit_button:
     if food_name.strip() == "":
@@ -226,7 +238,7 @@ processed_foods = process_and_sort_fridge(raw_foods)
 expired_list = [f for f in processed_foods if f["days_left"] < 0]
 urgent_list = [f for f in processed_foods if 0 <= f["days_left"] <= 2]
 
-# 🚨 VIEW CONTEXT ZONE A: EXPIRING SOON & EXPIRED HIGHLIGHTS (Fixed Parameters here)
+# 🚨 VIEW CONTEXT ZONE A: EXPIRING SOON & EXPIRED HIGHLIGHTS
 if expired_list or urgent_list:
     st.markdown("### 🚨 Urgent Attention Required")
     
@@ -236,7 +248,7 @@ if expired_list or urgent_list:
             st.markdown(f"""
             <div class="food-card-expired">
                 <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
-                <span style="color:#C70000; font-size:0.9rem;">⚠️ EXPIRED ({abs(item['days_left'])} days ago) • {item['category']}</span>
+                <span style="color:#FF8A8A; font-size:0.9rem; font-weight:bold;">⚠️ EXPIRED ({abs(item['days_left'])} days ago) • {item['category']}</span>
             </div>
             """, unsafe_allow_html=True)
         with col2:
@@ -252,7 +264,7 @@ if expired_list or urgent_list:
             st.markdown(f"""
             <div class="food-card-urgent">
                 <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
-                <span style="color:#B87400; font-size:0.9rem;">⏱️ Expires {days_str} • {item['category']}</span>
+                <span style="color:#FFD07B; font-size:0.9rem; font-weight:bold;">⏱️ Expires {days_str} • {item['category']}</span>
             </div>
             """, unsafe_allow_html=True)
         with col2:
@@ -263,10 +275,17 @@ if expired_list or urgent_list:
                 
     st.markdown("---")
 
-# 🗄️ VIEW CONTEXT ZONE B: MAIN FRIDGE INVENTORY CONTENT VIEW (Fixed Parameter here)
-st.markdown("### 🥦 Your Fridge Contents")
+# 🗄️ VIEW CONTEXT ZONE B: MAIN FRIDGE INVENTORY CONTENT VIEW
+st.markdown("### 🧊 Your Fridge")
 if not processed_foods:
-    st.info("Your virtual fridge is empty. Add items using the left sidebar menu panel to start tracking shelf life!")
+    # Stylized clean fallback state matching your original empty container design
+    st.markdown("""
+    <div style="text-align:center; padding: 40px; background-color: rgba(255,255,255,0.05); border-radius:12px; margin-top:10px;">
+        <div style="font-size:3rem; margin-bottom:15px;">🫙</div>
+        <h4 style="margin:0; font-weight:600;">Your fridge is empty!</h4>
+        <p style="color:gray; margin-top:5px;">Add your first item using the sidebar &rarr;</p>
+    </div>
+    """, unsafe_allow_html=True)
 else:
     for item in processed_foods:
         if item['days_left'] <= 2:
@@ -277,7 +296,7 @@ else:
             st.markdown(f"""
             <div class="food-card">
                 <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
-                <span style="color:#555; font-size:0.9rem;">🗓️ {item['days_left']} days remaining • {item['category']}</span>
+                <span style="opacity:0.8; font-size:0.9rem;">🗓️ {item['days_left']} days remaining • {item['category']}</span>
             </div>
             """, unsafe_allow_html=True)
         with col2:
@@ -286,7 +305,7 @@ else:
                 delete_food_item(item['id'])
                 st.rerun()
 
-# 🤖 VIEW CONTEXT ZONE C: MASCOT & ANALYTICAL METRIC DASHBOARDS (Fixed Parameter here)
+# 🤖 VIEW CONTEXT ZONE C: MASCOT & ANALYTICAL METRIC DASHBOARDS
 st.markdown("### 📊 Fridge Vital Stats")
 
 total_items = len(processed_foods)
@@ -296,13 +315,13 @@ waste_prevented = total_items * 3
 stat1, stat2, stat3 = st.columns(3)
 stat1.metric("Total Items", total_items)
 stat2.metric("Expiring/Expired", danger_count, delta=f"{danger_count} items", delta_color="inverse")
-stat3.metric("Waste Avoided", f"~{waste_prevented} lbs")
+stat3.metric("Waste Avoided", f"{waste_prevented} items")
 
 feedback_message = get_mascot_feedback(processed_foods)
 st.markdown(f"""
 <div class="mascot-box">
     <div style="font-size: 2.5rem; margin-bottom: 5px;">🥕</div>
-    <div style="font-style: italic; color: #5C4033; font-weight: 600; font-size: 1.05rem;">
+    <div class="mascot-text">
         "{feedback_message}"
     </div>
 </div>
