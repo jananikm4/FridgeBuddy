@@ -131,7 +131,7 @@ def get_mascot_feedback(processed_foods):
 
 st.set_page_config(page_title="FridgeBuddy 🥕", page_icon="🥕", layout="centered")
 
-# Custom Injectable Styling Layers via Markdown block configuration
+# Custom Injectable Styling Layers via Markdown block configuration (Fixed Parameter here)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
@@ -182,11 +182,11 @@ st.markdown("""
         margin-top: 25px;
     }
     </style>
-""", unsafe_allowed_html=True)
+""", unsafe_allow_html=True)
 
 # Main Dashboard Typography Headers
-st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allowed_html=True)
-st.markdown("<p class='sub-title'>Your cute little fridge assistant to stop wasting groceries</p>", unsafe_allowed_html=True)
+st.markdown("<h1 class='main-title'>FridgeBuddy 🥕</h1>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>Your cute little fridge assistant to stop wasting groceries</p>", unsafe_allow_html=True)
 
 # SIDEBAR OPERATIONS PANEL
 st.sidebar.markdown("### 📥 Restock Your Fridge")
@@ -226,7 +226,7 @@ processed_foods = process_and_sort_fridge(raw_foods)
 expired_list = [f for f in processed_foods if f["days_left"] < 0]
 urgent_list = [f for f in processed_foods if 0 <= f["days_left"] <= 2]
 
-# 🚨 VIEW CONTEXT ZONE A: EXPIRING SOON & EXPIRED HIGHLIGHTS
+# 🚨 VIEW CONTEXT ZONE A: EXPIRING SOON & EXPIRED HIGHLIGHTS (Fixed Parameters here)
 if expired_list or urgent_list:
     st.markdown("### 🚨 Urgent Attention Required")
     
@@ -238,9 +238,9 @@ if expired_list or urgent_list:
                 <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
                 <span style="color:#C70000; font-size:0.9rem;">⚠️ EXPIRED ({abs(item['days_left'])} days ago) • {item['category']}</span>
             </div>
-            """, unsafe_allowed_html=True)
+            """, unsafe_allow_html=True)
         with col2:
-            st.write("")  # spacing balance container padding element
+            st.write("")  
             if st.button("🗑️ Toss", key=f"exp_{item['id']}"):
                 delete_food_item(item['id'])
                 st.rerun()
@@ -254,7 +254,7 @@ if expired_list or urgent_list:
                 <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
                 <span style="color:#B87400; font-size:0.9rem;">⏱️ Expires {days_str} • {item['category']}</span>
             </div>
-            """, unsafe_allowed_html=True)
+            """, unsafe_allow_html=True)
         with col2:
             st.write("")
             if st.button("🍽️ Eat", key=f"urg_{item['id']}"):
@@ -263,13 +263,12 @@ if expired_list or urgent_list:
                 
     st.markdown("---")
 
-# 🗄️ VIEW CONTEXT ZONE B: MAIN FRIDGE INVENTORY CONTENT VIEW
+# 🗄️ VIEW CONTEXT ZONE B: MAIN FRIDGE INVENTORY CONTENT VIEW (Fixed Parameter here)
 st.markdown("### 🥦 Your Fridge Contents")
 if not processed_foods:
     st.info("Your virtual fridge is empty. Add items using the left sidebar menu panel to start tracking shelf life!")
 else:
     for item in processed_foods:
-        # Avoid cluttering layout with duplicates already displayed in the highlight grid view above
         if item['days_left'] <= 2:
             continue
             
@@ -280,14 +279,14 @@ else:
                 <span style="font-size:1.2rem;">{item['emoji']} <b>{item['name']}</b></span><br>
                 <span style="color:#555; font-size:0.9rem;">🗓️ {item['days_left']} days remaining • {item['category']}</span>
             </div>
-            """, unsafe_allowed_html=True)
+            """, unsafe_allow_html=True)
         with col2:
             st.write("")
             if st.button("✅ Done", key=f"all_{item['id']}"):
                 delete_food_item(item['id'])
                 st.rerun()
 
-# 🤖 VIEW CONTEXT ZONE C: MASCOT & ANALYTICAL METRIC DASHBOARDS
+# 🤖 VIEW CONTEXT ZONE C: MASCOT & ANALYTICAL METRIC DASHBOARDS (Fixed Parameter here)
 st.markdown("### 📊 Fridge Vital Stats")
 
 total_items = len(processed_foods)
@@ -300,10 +299,11 @@ stat2.metric("Expiring/Expired", danger_count, delta=f"{danger_count} items", de
 stat3.metric("Waste Avoided", f"~{waste_prevented} lbs")
 
 feedback_message = get_mascot_feedback(processed_foods)
-st.markdown("""
+st.markdown(f"""
 <div class="mascot-box">
     <div style="font-size: 2.5rem; margin-bottom: 5px;">🥕</div>
     <div style="font-style: italic; color: #5C4033; font-weight: 600; font-size: 1.05rem;">
         "{feedback_message}"
     </div>
-""", unsafe_allow_html=True) #  Correct parameter name
+</div>
+""", unsafe_allow_html=True)
