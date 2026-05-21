@@ -206,25 +206,46 @@ def get_mood_emoji(mood: str) -> str:
     return {"happy": "😄", "worried": "😰", "sad": "😢", "chaos": "🤯"}.get(mood, "🥕")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# REFACTOR INTERACTIVE LAYOUT & SMOOTH TRANSITIONS CSS
+# REFACTOR INTERACTIVE LAYOUT, DYNAMIC TRANSITIONS & SIDEBAR FIXES
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-/* ── Force Sidebar Toggle Button to be Visible ── */
-[data-testid="stSidebarCollapseButton"] button svg {
-    fill: #ffffff !important;
-    color: #ffffff !important;
-}
-
-/* Apply font scaling universally without smashing original input elements */
+/* Apply custom font mapping without overriding native input rendering states */
 html, body, [class*="css"] {
     font-family: 'Nunito', sans-serif !important;
 }
 
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem !important; }
+
+/* ── Fix Streamlit Sidebar Toggle Buttons Visibility ── */
+[data-testid="stSidebarCollapseButton"] button, 
+[data-testid="collapsedControl"] button {
+    background-color: #8fbc8f !important;
+    border: 1px solid #c8e6c8 !important;
+    border-radius: 50% !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    z-index: 999999 !important;
+    transition: transform 0.2s ease !important;
+}
+[data-testid="stSidebarCollapseButton"] button:hover, 
+[data-testid="collapsedControl"] button:hover {
+    transform: scale(1.08) !important;
+}
+[data-testid="stSidebarCollapseButton"] svg, 
+[data-testid="collapsedControl"] svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    width: 20px !important;
+    height: 20px !important;
+}
 
 /* ── Clear, High Contrast Metric Blocks ── */
 [data-testid="stMetric"] {
@@ -248,12 +269,12 @@ html, body, [class*="css"] {
     color: #222222 !important; 
 }
 
-/* ── Custom Styled Form Fields ── */
+/* ── Custom Styled Input Containers ── */
 div[data-baseweb="input"], div[data-baseweb="select"] {
     border-radius: 12px !important;
 }
 
-/* ── Fluid Interactive Buttons ── */
+/* ── Interactive Utility Grid Buttons ── */
 .stButton > button {
     border-radius: 12px !important;
     font-weight: 700 !important;
@@ -265,7 +286,7 @@ div[data-baseweb="input"], div[data-baseweb="select"] {
     background-color: #f0f7f0 !important;
 }
 
-/* ── Custom Sidebar Submit Button Accent ── */
+/* ── Sidebar Submission Anchor Button ── */
 [data-testid="stSidebar"] .stButton > button {
     background: linear-gradient(135deg, #8fbc8f, #6aaa6a) !important;
     color: #ffffff !important;
