@@ -5,17 +5,71 @@ import os
 import random
 
 # ════════════════════════════════════════════════
-# PAGE CONFIG
+# PAGE CONFIG & CLEAN THEME
 # ════════════════════════════════════════════════
 st.set_page_config(
-    page_title="FridgeBuddy 🥕",
+    page_title="FridgeBuddy",
     page_icon="🥕",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# Custom Global CSS for a clean enterprise-grade aesthetic
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    /* Core Typography */
+    html, body, [class*="css"], .stApp {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Elegant Title Design */
+    .main-title {
+        font-size: 2.75rem;
+        font-weight: 700;
+        color: #1E293B;
+        margin-bottom: 0.25rem;
+    }
+    .main-subtitle {
+        font-size: 1.05rem;
+        color: #64748B;
+        margin-bottom: 2rem;
+    }
+
+    /* Card styling */
+    .panel-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
+    }
+    
+    /* Action Panels (Recipe / Mascot) */
+    .action-panel {
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+    }
+    .recipe-bg {
+        background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+        border: 1px solid #FED7AA;
+    }
+    .mascot-bg {
+        background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+        border: 1px solid #BBF7D0;
+    }
+    
+    /* Remove default padding overheads */
+    .block-container { padding-top: 2.5rem; }
+    footer { visibility: hidden; }
+</style>
+""", unsafe_allow_html=True)
+
 # ════════════════════════════════════════════════
-# STORAGE
+# STORAGE LAYER
 # ════════════════════════════════════════════════
 DATA_FILE = "fridge_data.json"
 
@@ -36,7 +90,7 @@ if "foods" not in st.session_state:
     st.session_state.foods = load_foods()
 
 # ════════════════════════════════════════════════
-# FOOD DATA
+# METADATA MAPS
 # ════════════════════════════════════════════════
 CATEGORY_EMOJIS = {
     "Fruits 🍎": "🍎",
@@ -64,7 +118,7 @@ def detect_emoji(name, category):
     return CATEGORY_EMOJIS.get(category, "🍽️")
 
 # ════════════════════════════════════════════════
-# HELPERS
+# UTILITIES
 # ════════════════════════════════════════════════
 def days_left(expiry):
     try:
@@ -73,28 +127,17 @@ def days_left(expiry):
     except:
         return 0
 
-def status_text(days):
+def get_status_details(days):
     if days < 0:
-        return f"💀 Expired {abs(days)} day(s) ago"
+        return f"Expired {abs(days)}d ago", "🔴"
     if days == 0:
-        return "🔥 Expires TODAY"
+        return "Expires TODAY", "🟠"
     if days == 1:
-        return "⚡ Expires tomorrow"
-    if days <= 3:
-        return f"😬 {days} days left"
-    return f"✅ {days} days left"
-
-def urgency(days):
-    if days < 0:
-        return "expired"
-    if days <= 2:
-        return "critical"
-    if days <= 5:
-        return "warning"
-    return "good"
+        return "Expires tomorrow", "🟡"
+    return f"{days} days left", "🟢"
 
 # ════════════════════════════════════════════════
-# FOOD ACTIONS
+# DATA ACTIONS
 # ════════════════════════════════════════════════
 def add_food(name, category, expiry):
     food = {
@@ -112,238 +155,152 @@ def delete_food(food_id):
     save_foods(st.session_state.foods)
 
 # ════════════════════════════════════════════════
-# SORTING & DATA SPLITTING
-# ════════════════════════════════════════════════
-foods = sorted(st.session_state.foods, key=lambda x: days_left(x["expiry"]))
-expired = [f for f in foods if days_left(f["expiry"]) < 0]
-expiring = [f for f in foods if 0 <= days_left(f["expiry"]) <= 2]
-
-# ════════════════════════════════════════════════
-# MASTER THEME AND TEXT CONTRAST OVERRIDES
-# ════════════════════════════════════════════════
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-
-html, body, [class*="css"] { font-family: 'Nunito', sans-serif; }
-#MainMenu, footer { visibility: hidden; }
-.block-container { padding-top: 2rem; }
-
-.stApp { background: linear-gradient(135deg, #fff7ec, #ffe5bf, #ffd18f); }
-h1, h2, h3 { color: #070A3C !important; }
-
-/* Main app content text color fix */
-.stApp p, .stApp span, .stApp label, .stApp div:not([data-testid="stSidebar"]) { color: #222222; }
-
-/* ── FOOLPROOF SIDEBAR TEXT FIX ── */
-section[data-testid="stSidebar"] { 
-    background: linear-gradient(180deg, #070A3C, #062375) !important; 
-}
-section[data-testid="stSidebar"] * { 
-    color: #ffffff !important; 
-}
-
-/* Fix input placeholder options to never be white-on-white */
-div[data-baseweb="select"] * {
-    color: #222222 !important;
-}
-
-/* Clean UI Input Fields */
-.stTextInput input, .stDateInput input { 
-    background: white !important; 
-    color: #222 !important; 
-    border-radius: 16px !important; 
-    border: 2px solid rgba(240,102,42,0.2) !important; 
-}
-.stSelectbox > div > div { 
-    background: white !important; 
-    border-radius: 16px !important; 
-    border: 2px solid rgba(240,102,42,0.2) !important; 
-}
-
-/* Interactive Hover Buttons */
-.stButton > button { 
-    background: linear-gradient(135deg, #F0662A, #F6941D) !important; 
-    color: white !important; 
-    border: none !important; 
-    border-radius: 18px !important; 
-    font-weight: 800 !important; 
-    box-shadow: 0 4px 10px rgba(240,102,42,0.25) !important;
-    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-}
-.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(240,102,42,0.4) !important; }
-
-/* Dashboard Cards */
-[data-testid="stMetric"] { background: rgba(255,255,255,0.85); border-radius: 24px; padding: 1.2rem; backdrop-filter: blur(10px); box-shadow: 0 8px 24px rgba(0,0,0,0.03); }
-
-/* Premium HTML Food Cards */
-.html-food-card {
-    border-radius: 20px;
-    padding: 1.2rem;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.04);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.stProgress > div > div > div > div { background: linear-gradient(90deg, #F6941D, #F0662A) !important; }
-.recipe-box { background: linear-gradient(135deg, #F0662A, #F6941D); padding: 1.5rem; border-radius: 24px; box-shadow: 0 8px 20px rgba(240,102,42,0.2); }
-.recipe-box * { color: white !important; }
-
-.mascot-box { background: linear-gradient(135deg, #070A3C, #062375); padding: 1.5rem; border-radius: 24px; box-shadow: 0 8px 20px rgba(7,10,60,0.2); }
-.mascot-box * { color: white !important; }
-</style>
-""", unsafe_allow_html=True)
-
-# ════════════════════════════════════════════════
-# SIDEBAR
+# SIDEBAR CONTROL
 # ════════════════════════════════════════════════
 with st.sidebar:
     st.title("🥕 FridgeBuddy")
-    st.caption("your chaotic fridge assistant")
-    st.divider()
+    st.caption("Smart Shelf Tracking")
+    st.space = st.empty()
+    st.markdown("---")
     
-    add_name = st.text_input("Food Name", placeholder="e.g. Tomato, Milk, Yogurt...", key="sidebar_add_name")
-    add_cat = st.selectbox("Category", list(CATEGORY_EMOJIS.keys()), key="sidebar_add_cat")
-    add_expiry = st.date_input("Expiry Date", value=date.today(), key="sidebar_add_expiry")
+    add_name = st.text_input("Item Name", placeholder="e.g., Greek Yogurt, Spinach")
+    add_cat = st.selectbox("Category Group", list(CATEGORY_EMOJIS.keys()))
+    add_expiry = st.date_input("Expiration Date", value=date.today())
     
     if add_name.strip():
-        st.info(f"Detected emoji: {detect_emoji(add_name, add_cat)}")
+        st.caption(f"Auto-assigned Icon: {detect_emoji(add_name, add_cat)}")
         
-    if st.button("🥗 Add to Fridge", use_container_width=True):
+    if st.button("➕ Log Item to Fridge", use_container_width=True, type="primary"):
         if not add_name.strip():
-            st.error("Enter a food name 😭")
+            st.error("Please specify a valid item name.")
         else:
             add_food(add_name.strip(), add_cat, add_expiry)
             st.success(f"Added {add_name.strip()}!")
             st.rerun()
 
 # ════════════════════════════════════════════════
-# MAIN HEADER TITLE
+# APP CONTAINER & STATISTICS
 # ════════════════════════════════════════════════
-st.markdown("""
-<div style='text-align:center;'>
-    <h1 style='font-size:4.5rem;font-weight:900;'> 🥕 FridgeBuddy </h1>
-    <p style='font-size:1.2rem; font-weight:600; opacity:0.85; color: #333333;'> keeping your food alive one panic notification at a time </p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div class='main-title'>FridgeBuddy</div>", unsafe_allow_html=True)
+st.markdown("<div class='main-subtitle'>Intelligent tracking ecosystem for household food preservation.</div>", unsafe_allow_html=True)
+
+# Data Processing
+foods = sorted(st.session_state.foods, key=lambda x: days_left(x["expiry"]))
+expired = [f for f in foods if days_left(f["expiry"]) < 0]
+expiring = [f for f in foods if 0 <= days_left(f["expiry"]) <= 2]
+
+# Premium Native Metrics
+m1, m2, m3, m4 = st.columns(4)
+m1.metric(label="Total Inventory", value=len(foods))
+m2.metric(label="Critical (<48h)", value=len(expiring), delta=f"{len(expiring)} urgent" if expiring else None, delta_color="inverse")
+m3.metric(label="Expired Status", value=len(expired), delta=f"{len(expired)} items" if expired else None, delta_color="off")
+m4.metric(label="Saved Counter", value=max(0, len(foods) - len(expired)))
+
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════
-# METRICS ROW
+# FILTERS & SEARCH CONTROLS
 # ════════════════════════════════════════════════
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("📦 Total", len(foods))
-c2.metric("🔥 Expiring Soon", len(expiring))
-c3.metric("💀 Expired", len(expired))
-c4.metric("♻️ Saved", max(0, len(foods) - len(expired)))
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ════════════════════════════════════════════════
-# FILTER INVENTORY CONTROL
-# ════════════════════════════════════════════════
-f1, f2 = st.columns(2)
-with f1:
-    selected_category = st.selectbox("Filter Category", ["All"] + list(CATEGORY_EMOJIS.keys()))
-with f2:
-    search = st.text_input("🔍 Search", placeholder="Search items in your fridge...")
+ctrl_col1, ctrl_col2 = st.columns([1, 2])
+with ctrl_col1:
+    selected_category = st.selectbox("Category Filter", ["All Categories"] + list(CATEGORY_EMOJIS.keys()), label_visibility="collapsed")
+with ctrl_col2:
+    search = st.text_input("Search Engine", placeholder="🔍 Search current kitchen inventory...", label_visibility="collapsed")
 
 filtered_foods = foods
-if selected_category != "All":
+if selected_category != "All Categories":
     filtered_foods = [f for f in filtered_foods if f["category"] == selected_category]
 if search.strip():
     filtered_foods = [f for f in filtered_foods if search.lower() in f["name"].lower()]
 
-# ════════════════════════════════════════════════
-# BULK REMOVAL
-# ════════════════════════════════════════════════
+# Bulk Clean-Up Button
 if expired:
-    if st.button("🧹 Clear All Expired Items", use_container_width=True):
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🧹 Purge All Expired Items from Database", use_container_width=True):
         st.session_state.foods = [f for f in st.session_state.foods if days_left(f["expiry"]) >= 0]
         save_foods(st.session_state.foods)
-        st.success("Expired items removed!")
+        st.toast("Database optimized: Expired elements wiped.")
         st.rerun()
 
-# ════════════════════════════════════════════════
-# COMPONENT: MAIN FOOD TRACKER VIEW
-# ════════════════════════════════════════════════
-st.subheader("🧊 Your Fridge")
+st.markdown("---")
 
-if len(filtered_foods) == 0:
-    st.markdown("""
-    <div style='text-align:center; padding:4rem; background: rgba(255,255,255,0.6); border-radius: 24px; border: 2px dashed rgba(0,0,0,0.1);'>
-        <div style='font-size:5rem;'>🫙</div>
-        <h2 style='margin-top:1rem; color: #070A3C;'>Your matching fridge contents are empty</h2>
-        <p style='color:#666;'>Clear your search filters or add a new food item from the sidebar container!</p>
-    </div>
-    """, unsafe_allow_html=True)
+# ════════════════════════════════════════════════
+# INVENTORY DISPLAY PLATFORM
+# ════════════════════════════════════════════════
+st.subheader("🧊 Live Inventory Matrix")
+
+if not filtered_foods:
+    st.info("No tracking assets match your current structural filters. Add objects or clear filters to begin.")
 else:
-    for food in filtered_foods:
+    for idx, food in enumerate(filtered_foods):
         d = days_left(food["expiry"])
-        bg = {"expired": "#ffe5e5", "critical": "#fff0df", "warning": "#fff7df", "good": "#ffffff"}[urgency(d)]
+        label, indicator = get_status_details(d)
         
-        # Premium nested card logic block
-        st.markdown(f"""
-        <div class="html-food-card" style="background: {bg}; border: 1px solid rgba(0,0,0,0.05);">
-            <div>
-                <span style="font-size:1.8rem; margin-right:0.5rem;">{food["emoji"]}</span>
-                <strong style="font-size:1.3rem; color:#070A3C;">{food["name"]}</strong>
-                <br><span style="font-size:0.85rem; color:#666;">{food["category"]}</span>
-            </div>
-            <div style="text-align: right;">
-                <span style="font-size:1.1rem; font-weight:800; color:#070A3C;">{status_text(d)}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Layout matching spacing for progress bars and consume action triggers
-        col_bar, col_btn = st.columns([5, 1])
-        with col_bar:
-            progress = min(max((d + 1) / 14, 0.0), 1.0)
-            st.progress(progress)
-        with col_btn:
-            if st.button("🗑️ Consumed", key=food["id"], use_container_width=True):
-                delete_food(food["id"])
-                st.rerun()
-        st.markdown("<div style='margin-bottom:1.5rem;'></div>", unsafe_allow_html=True)
+        # Using built-in containers with subtle custom markup for precise alignment
+        with st.container():
+            col_icon, col_details, col_progress, col_action = st.columns([0.5, 2.5, 4, 1])
+            
+            with col_icon:
+                st.markdown(f"<div style='font-size: 2rem; padding-top: 5px; text-align: center;'>{food['emoji']}</div>", unsafe_allow_html=True)
+                
+            with col_details:
+                st.markdown(f"**{food['name']}** &nbsp;•&nbsp; <small style='color:#64748B;'>{food['category']}</small>", unsafe_allow_html=True)
+                st.markdown(f"<small>{indicator} {label}</small>", unsafe_allow_html=True)
+                
+            with col_progress:
+                progress_val = min(max((d + 1) / 14, 0.0), 1.0)
+                st.markdown("<div style='padding-top: 15px;'></div>", unsafe_allow_html=True)
+                st.progress(progress_val)
+                
+            with col_action:
+                st.markdown("<div style='padding-top: 5px;'></div>", unsafe_allow_html=True)
+                if st.button("Mark Consumed", key=f"del_{food['id']}_{idx}", use_container_width=True, type="secondary"):
+                    delete_food(food["id"])
+                    st.rerun()
+                    
+            st.markdown("<div style='border-bottom: 1px solid #F1F5F9; margin: 0.75rem 0;'></div>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════
-# PANELS: RECIPES & MASCOT SYSTEM
+# ANALYTICS & INSIGHT MODULES
 # ════════════════════════════════════════════════
 st.markdown("<br>", unsafe_allow_html=True)
 c_left, c_right = st.columns(2)
 
 with c_left:
     recipe_messages = [
-        "🍳 Omelette arc unlocked.",
-        "🥪 Sandwich engineering opportunity detected.",
-        "🍚 Fried rice would go hard right now.",
-        "🥤 Smoothie time.",
-        "🍜 Noodle era activated."
+        "Omelette curation strategy unlocked.",
+        "Sandwich asset deployment opportunities detected.",
+        "Wok-fried rice optimization highly recommended.",
+        "Fruit smoothie extraction sequence ready.",
+        "Noodle base assembly parameters activated."
     ]
     st.markdown(f"""
-    <div class='recipe-box'>
-        <h3> 👨‍🍳 Recipe Suggestion </h3>
-        <p style="font-size:1.1rem; font-weight:600;"> {random.choice(recipe_messages)} </p>
+    <div class='action-panel recipe-bg'>
+        <h4 style='color: #9A3412; margin-top:0;'>👨‍🍳 Smart Recipe Suggestion</h4>
+        <p style="font-size: 0.95rem; color: #C2410C; font-weight: 500; margin: 0;"> 
+            {random.choice(recipe_messages)} 
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
 with c_right:
     good_messages = [
-        "Your fridge is thriving ✨",
-        "No food casualties detected 🫡",
-        "This fridge has emotional stability."
+        "Inventory stabilization complete. No waste trajectories predicted.",
+        "Zero food casualties imminent. High shelf efficiency.",
+        "Storage patterns demonstrate maximum emotional and structural stability."
     ]
     chaos_messages = [
-        "Your yogurt is entering its villain arc 😭",
-        "Please eat something before it develops consciousness.",
-        "The spinach is fighting for its life."
+        "Dairy structures are demonstrating aggressive degradation curves.",
+        "Action required: Consume imminent perishables to prevent structural decay.",
+        "Leafy green properties are losing biological integrity."
     ]
     message = random.choice(chaos_messages) if len(expiring) > 2 or len(expired) > 0 else random.choice(good_messages)
+    
     st.markdown(f"""
-    <div class='mascot-box'>
-        <h3> 🥕 Carrot Says... </h3>
-        <p style="font-size:1.1rem; font-weight:600;"> {message} </p>
+    <div class='action-panel mascot-bg'>
+        <h4 style='color: #166534; margin-top:0;'>📊 Diagnostics & Insights</h4>
+        <p style="font-size: 0.95rem; color: #15803D; font-weight: 500; margin: 0;"> 
+            {message} 
+        </p>
     </div>
     """, unsafe_allow_html=True)
