@@ -5,71 +5,17 @@ import os
 import random
 
 # ════════════════════════════════════════════════
-# PAGE CONFIG & CLEAN THEME
+# PAGE CONFIG
 # ════════════════════════════════════════════════
 st.set_page_config(
     page_title="FridgeBuddy",
     page_icon="🥕",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom Global CSS for a clean enterprise-grade aesthetic
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    /* Core Typography */
-    html, body, [class*="css"], .stApp {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    /* Elegant Title Design */
-    .main-title {
-        font-size: 2.75rem;
-        font-weight: 700;
-        color: #1E293B;
-        margin-bottom: 0.25rem;
-    }
-    .main-subtitle {
-        font-size: 1.05rem;
-        color: #64748B;
-        margin-bottom: 2rem;
-    }
-
-    /* Card styling */
-    .panel-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 1.25rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        margin-bottom: 1rem;
-    }
-    
-    /* Action Panels (Recipe / Mascot) */
-    .action-panel {
-        border-radius: 12px;
-        padding: 1.5rem;
-        height: 100%;
-    }
-    .recipe-bg {
-        background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-        border: 1px solid #FED7AA;
-    }
-    .mascot-bg {
-        background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
-        border: 1px solid #BBF7D0;
-    }
-    
-    /* Remove default padding overheads */
-    .block-container { padding-top: 2.5rem; }
-    footer { visibility: hidden; }
-</style>
-""", unsafe_allow_html=True)
-
 # ════════════════════════════════════════════════
-# STORAGE LAYER
+# STORAGE
 # ════════════════════════════════════════════════
 DATA_FILE = "fridge_data.json"
 
@@ -90,217 +36,513 @@ if "foods" not in st.session_state:
     st.session_state.foods = load_foods()
 
 # ════════════════════════════════════════════════
-# METADATA MAPS
+# THEMES
 # ════════════════════════════════════════════════
-CATEGORY_EMOJIS = {
-    "Fruits 🍎": "🍎",
-    "Vegetables 🥦": "🥦",
-    "Dairy 🥛": "🥛",
-    "Snacks 🍪": "🍪",
-    "Drinks 🧃": "🧃",
-    "Frozen ❄️": "❄️",
-    "Leftovers 🍱": "🍱",
+THEMES = {
+    "Sunset Kitchen": {
+        "bg1": "#FFF7ED",
+        "bg2": "#FFE7C7",
+        "primary": "#F0662A",
+        "secondary": "#F6941D",
+        "dark": "#070A3C",
+        "card": "#FFFFFF",
+        "text": "#1E293B"
+    },
+    "Midnight Fridge Raid": {
+        "bg1": "#0F172A",
+        "bg2": "#111827",
+        "primary": "#8B5CF6",
+        "secondary": "#6366F1",
+        "dark": "#F8FAFC",
+        "card": "#1E293B",
+        "text": "#F8FAFC"
+    },
+    "Strawberry Milk": {
+        "bg1": "#FFF1F2",
+        "bg2": "#FFE4E6",
+        "primary": "#FB7185",
+        "secondary": "#FDA4AF",
+        "dark": "#881337",
+        "card": "#FFFFFF",
+        "text": "#4C0519"
+    }
 }
+
+# ════════════════════════════════════════════════
+# MASCOTS
+# ════════════════════════════════════════════════
+MASCOTS = {
+    "Carrot 🥕": {
+        "emoji": "🥕",
+        "good": [
+            "Your fridge is thriving bestie.",
+            "No food casualties today.",
+            "We are so unbelievably back."
+        ],
+        "bad": [
+            "Your yogurt is entering its villain arc.",
+            "Please eat something before it gains sentience.",
+            "The spinach is fighting for its life."
+        ]
+    },
+    "Frog 🐸": {
+        "emoji": "🐸",
+        "good": [
+            "You’re doing amazing sweetie.",
+            "Tiny fridge victories matter too.",
+            "Your vegetables feel appreciated."
+        ],
+        "bad": [
+            "Oopsie. The milk is scared.",
+            "Maybe we save the strawberries today?",
+            "The lettuce believes in you."
+        ]
+    },
+    "Cat 🐈": {
+        "emoji": "🐈",
+        "good": [
+            "Acceptable.",
+            "You avoided disaster. Barely.",
+            "Hm. Competent."
+        ],
+        "bad": [
+            "Pathetic.",
+            "Your fridge smells like consequences.",
+            "I’ve seen raccoons organize food better."
+        ]
+    }
+}
+
+# ════════════════════════════════════════════════
+# SIDEBAR SETTINGS
+# ════════════════════════════════════════════════
+with st.sidebar:
+    st.title("⚙️ Fridge Settings")
+
+    selected_theme = st.selectbox(
+        "Choose Theme",
+        list(THEMES.keys())
+    )
+
+    selected_mascot = st.selectbox(
+        "Choose Mascot",
+        list(MASCOTS.keys())
+    )
+
+theme = THEMES[selected_theme]
+mascot = MASCOTS[selected_mascot]
+
+# ════════════════════════════════════════════════
+# CSS
+# ════════════════════════════════════════════════
+st.markdown(f"""
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+html, body, [class*="css"] {{
+    font-family: 'Inter', sans-serif;
+}}
+
+#MainMenu {{
+    visibility: hidden;
+}}
+
+footer {{
+    visibility: hidden;
+}}
+
+.stApp {{
+    background:
+    linear-gradient(
+        135deg,
+        {theme["bg1"]},
+        {theme["bg2"]}
+    );
+}}
+
+.block-container {{
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+    max-width: 1200px;
+}}
+
+.hero-card {{
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(16px);
+    border-radius: 28px;
+    padding: 2.5rem;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}}
+
+.title {{
+    font-size: 4rem;
+    font-weight: 800;
+    color: {theme["dark"]};
+    line-height: 1;
+}}
+
+.subtitle {{
+    color: #64748B;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}}
+
+.glass-card {{
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(14px);
+    border-radius: 24px;
+    padding: 1.2rem;
+    border: 1px solid rgba(255,255,255,0.4);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+}}
+
+.food-name {{
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: {theme["text"]};
+}}
+
+.food-status {{
+    font-size: 0.95rem;
+    color: #64748B;
+}}
+
+.metric-card {{
+    background: rgba(255,255,255,0.7);
+    border-radius: 24px;
+    padding: 1.2rem;
+    text-align: center;
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.5);
+}}
+
+.metric-value {{
+    font-size: 2rem;
+    font-weight: 800;
+    color: {theme["dark"]};
+}}
+
+.metric-label {{
+    color: #64748B;
+}}
+
+.floating-mascot {{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    background: {theme["card"]};
+    border-radius: 28px;
+    padding: 1.2rem;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.12);
+    z-index: 999;
+    animation: floaty 3s ease-in-out infinite;
+}}
+
+@keyframes floaty {{
+    0% {{ transform: translateY(0px); }}
+    50% {{ transform: translateY(-6px); }}
+    100% {{ transform: translateY(0px); }}
+}}
+
+.mascot-face {{
+    font-size: 3rem;
+}}
+
+.mascot-text {{
+    font-size: 0.95rem;
+    color: #475569;
+    margin-top: 0.5rem;
+}}
+
+.stButton > button {{
+    background: linear-gradient(
+        135deg,
+        {theme["primary"]},
+        {theme["secondary"]}
+    ) !important;
+
+    color: white !important;
+    border: none !important;
+    border-radius: 18px !important;
+    height: 3rem !important;
+    font-weight: 700 !important;
+    transition: 0.2s ease;
+}}
+
+.stButton > button:hover {{
+    transform: translateY(-2px);
+}}
+
+.stTextInput input,
+.stDateInput input,
+.stSelectbox div[data-baseweb="select"] {{
+    border-radius: 16px !important;
+    border: none !important;
+    background: rgba(255,255,255,0.9) !important;
+}}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ════════════════════════════════════════════════
+# FOOD DATA
+# ════════════════════════════════════════════════
+CATEGORYS = [
+    "Fruits 🍎",
+    "Vegetables 🥦",
+    "Dairy 🥛",
+    "Snacks 🍪",
+    "Drinks 🧃",
+    "Frozen ❄️"
+]
 
 EMOJI_MAP = {
-    "apple": "🍎", "banana": "🍌", "milk": "🥛", "egg": "🥚",
-    "bread": "🍞", "pizza": "🍕", "burger": "🍔", "rice": "🍚",
-    "cake": "🎂", "coffee": "☕", "tea": "🍵", "carrot": "🥕",
-    "broccoli": "🥦", "cheese": "🧀", "pasta": "🍝", "noodle": "🍜",
-    "tomato": "🍅", "potato": "🥔", "onion": "🧅", "garlic": "🧄"
+    "apple": "🍎",
+    "banana": "🍌",
+    "milk": "🥛",
+    "pizza": "🍕",
+    "bread": "🍞",
+    "egg": "🥚",
+    "carrot": "🥕",
+    "tomato": "🍅",
+    "rice": "🍚",
+    "cheese": "🧀"
 }
 
-def detect_emoji(name, category):
+def detect_emoji(name):
     lower = name.lower()
-    for keyword, emoji in EMOJI_MAP.items():
-        if keyword in lower:
+
+    for word, emoji in EMOJI_MAP.items():
+        if word in lower:
             return emoji
-    return CATEGORY_EMOJIS.get(category, "🍽️")
+
+    return "🍽️"
 
 # ════════════════════════════════════════════════
-# UTILITIES
+# HELPERS
 # ════════════════════════════════════════════════
 def days_left(expiry):
-    try:
-        expiry_date = datetime.strptime(expiry, "%Y-%m-%d").date()
-        return (expiry_date - date.today()).days
-    except:
-        return 0
+    expiry_date = datetime.strptime(expiry, "%Y-%m-%d").date()
+    return (expiry_date - date.today()).days
 
-def get_status_details(days):
-    if days < 0:
-        return f"Expired {abs(days)}d ago", "🔴"
-    if days == 0:
-        return "Expires TODAY", "🟠"
-    if days == 1:
-        return "Expires tomorrow", "🟡"
-    return f"{days} days left", "🟢"
-
-# ════════════════════════════════════════════════
-# DATA ACTIONS
-# ════════════════════════════════════════════════
 def add_food(name, category, expiry):
     food = {
         "id": str(datetime.now().timestamp()),
         "name": name,
         "category": category,
-        "emoji": detect_emoji(name, category),
+        "emoji": detect_emoji(name),
         "expiry": expiry.strftime("%Y-%m-%d")
     }
+
     st.session_state.foods.append(food)
     save_foods(st.session_state.foods)
 
 def delete_food(food_id):
-    st.session_state.foods = [f for f in st.session_state.foods if f["id"] != food_id]
+    st.session_state.foods = [
+        f for f in st.session_state.foods
+        if f["id"] != food_id
+    ]
+
     save_foods(st.session_state.foods)
 
 # ════════════════════════════════════════════════
-# SIDEBAR CONTROL
+# HERO SECTION
 # ════════════════════════════════════════════════
-with st.sidebar:
-    st.title("🥕 FridgeBuddy")
-    st.caption("Smart Shelf Tracking")
-    st.space = st.empty()
-    st.markdown("---")
-    
-    add_name = st.text_input("Item Name", placeholder="e.g., Greek Yogurt, Spinach")
-    add_cat = st.selectbox("Category Group", list(CATEGORY_EMOJIS.keys()))
-    add_expiry = st.date_input("Expiration Date", value=date.today())
-    
-    if add_name.strip():
-        st.caption(f"Auto-assigned Icon: {detect_emoji(add_name, add_cat)}")
-        
-    if st.button("➕ Log Item to Fridge", use_container_width=True, type="primary"):
-        if not add_name.strip():
-            st.error("Please specify a valid item name.")
-        else:
-            add_food(add_name.strip(), add_cat, add_expiry)
-            st.success(f"Added {add_name.strip()}!")
-            st.rerun()
+st.markdown(f"""
+<div class="hero-card">
 
-# ════════════════════════════════════════════════
-# APP CONTAINER & STATISTICS
-# ════════════════════════════════════════════════
-st.markdown("<div class='main-title'>FridgeBuddy</div>", unsafe_allow_html=True)
-st.markdown("<div class='main-subtitle'>Intelligent tracking ecosystem for household food preservation.</div>", unsafe_allow_html=True)
+<div class="title">
+🥕 FridgeBuddy
+</div>
 
-# Data Processing
-foods = sorted(st.session_state.foods, key=lambda x: days_left(x["expiry"]))
-expired = [f for f in foods if days_left(f["expiry"]) < 0]
-expiring = [f for f in foods if 0 <= days_left(f["expiry"]) <= 2]
+<div class="subtitle">
+your emotionally manipulative fridge companion
+</div>
 
-# Premium Native Metrics
-m1, m2, m3, m4 = st.columns(4)
-m1.metric(label="Total Inventory", value=len(foods))
-m2.metric(label="Critical (<48h)", value=len(expiring), delta=f"{len(expiring)} urgent" if expiring else None, delta_color="inverse")
-m3.metric(label="Expired Status", value=len(expired), delta=f"{len(expired)} items" if expired else None, delta_color="off")
-m4.metric(label="Saved Counter", value=max(0, len(foods) - len(expired)))
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════
-# FILTERS & SEARCH CONTROLS
+# ADD FOOD PANEL
 # ════════════════════════════════════════════════
-ctrl_col1, ctrl_col2 = st.columns([1, 2])
-with ctrl_col1:
-    selected_category = st.selectbox("Category Filter", ["All Categories"] + list(CATEGORY_EMOJIS.keys()), label_visibility="collapsed")
-with ctrl_col2:
-    search = st.text_input("Search Engine", placeholder="🔍 Search current kitchen inventory...", label_visibility="collapsed")
+st.markdown("### ➕ Add New Food")
 
-filtered_foods = foods
-if selected_category != "All Categories":
-    filtered_foods = [f for f in filtered_foods if f["category"] == selected_category]
-if search.strip():
-    filtered_foods = [f for f in filtered_foods if search.lower() in f["name"].lower()]
+col1, col2, col3 = st.columns(3)
 
-# Bulk Clean-Up Button
-if expired:
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🧹 Purge All Expired Items from Database", use_container_width=True):
-        st.session_state.foods = [f for f in st.session_state.foods if days_left(f["expiry"]) >= 0]
-        save_foods(st.session_state.foods)
-        st.toast("Database optimized: Expired elements wiped.")
+with col1:
+    add_name = st.text_input(
+        "Food Name",
+        placeholder="Greek yogurt..."
+    )
+
+with col2:
+    add_cat = st.selectbox(
+        "Category",
+        CATEGORYS
+    )
+
+with col3:
+    add_expiry = st.date_input(
+        "Expiry Date",
+        value=date.today()
+    )
+
+if st.button("Add to Fridge", use_container_width=True):
+
+    if add_name.strip():
+        add_food(
+            add_name.strip(),
+            add_cat,
+            add_expiry
+        )
+
+        st.success("Added successfully.")
         st.rerun()
 
-st.markdown("---")
+# ════════════════════════════════════════════════
+# PROCESS DATA
+# ════════════════════════════════════════════════
+foods = sorted(
+    st.session_state.foods,
+    key=lambda x: days_left(x["expiry"])
+)
+
+expired = [
+    f for f in foods
+    if days_left(f["expiry"]) < 0
+]
+
+expiring = [
+    f for f in foods
+    if days_left(f["expiry"]) <= 2
+]
 
 # ════════════════════════════════════════════════
-# INVENTORY DISPLAY PLATFORM
+# METRICS
 # ════════════════════════════════════════════════
-st.subheader("🧊 Live Inventory Matrix")
+m1, m2, m3, m4 = st.columns(4)
 
-if not filtered_foods:
-    st.info("No tracking assets match your current structural filters. Add objects or clear filters to begin.")
-else:
-    for idx, food in enumerate(filtered_foods):
-        d = days_left(food["expiry"])
-        label, indicator = get_status_details(d)
-        
-        # Using built-in containers with subtle custom markup for precise alignment
-        with st.container():
-            col_icon, col_details, col_progress, col_action = st.columns([0.5, 2.5, 4, 1])
-            
-            with col_icon:
-                st.markdown(f"<div style='font-size: 2rem; padding-top: 5px; text-align: center;'>{food['emoji']}</div>", unsafe_allow_html=True)
-                
-            with col_details:
-                st.markdown(f"**{food['name']}** &nbsp;•&nbsp; <small style='color:#64748B;'>{food['category']}</small>", unsafe_allow_html=True)
-                st.markdown(f"<small>{indicator} {label}</small>", unsafe_allow_html=True)
-                
-            with col_progress:
-                progress_val = min(max((d + 1) / 14, 0.0), 1.0)
-                st.markdown("<div style='padding-top: 15px;'></div>", unsafe_allow_html=True)
-                st.progress(progress_val)
-                
-            with col_action:
-                st.markdown("<div style='padding-top: 5px;'></div>", unsafe_allow_html=True)
-                if st.button("Mark Consumed", key=f"del_{food['id']}_{idx}", use_container_width=True, type="secondary"):
-                    delete_food(food["id"])
-                    st.rerun()
-                    
-            st.markdown("<div style='border-bottom: 1px solid #F1F5F9; margin: 0.75rem 0;'></div>", unsafe_allow_html=True)
+metrics = [
+    ("Total", len(foods)),
+    ("Expiring", len(expiring)),
+    ("Expired", len(expired)),
+    ("Saved", max(0, len(foods)-len(expired)))
+]
 
-# ════════════════════════════════════════════════
-# ANALYTICS & INSIGHT MODULES
-# ════════════════════════════════════════════════
+for col, metric in zip([m1,m2,m3,m4], metrics):
+
+    with col:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-value">
+                {metric[1]}
+            </div>
+
+            <div class="metric-label">
+                {metric[0]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 st.markdown("<br>", unsafe_allow_html=True)
-c_left, c_right = st.columns(2)
 
-with c_left:
-    recipe_messages = [
-        "Omelette curation strategy unlocked.",
-        "Sandwich asset deployment opportunities detected.",
-        "Wok-fried rice optimization highly recommended.",
-        "Fruit smoothie extraction sequence ready.",
-        "Noodle base assembly parameters activated."
-    ]
-    st.markdown(f"""
-    <div class='action-panel recipe-bg'>
-        <h4 style='color: #9A3412; margin-top:0;'>👨‍🍳 Smart Recipe Suggestion</h4>
-        <p style="font-size: 0.95rem; color: #C2410C; font-weight: 500; margin: 0;"> 
-            {random.choice(recipe_messages)} 
-        </p>
+# ════════════════════════════════════════════════
+# FOOD LIST
+# ════════════════════════════════════════════════
+st.markdown("## 🧊 Your Fridge")
+
+if not foods:
+
+    st.markdown("""
+    <div class="glass-card" style="text-align:center;">
+        <h2>your fridge is empty bestie</h2>
+        <p>add something before the carrot gets concerned</p>
     </div>
     """, unsafe_allow_html=True)
 
-with c_right:
-    good_messages = [
-        "Inventory stabilization complete. No waste trajectories predicted.",
-        "Zero food casualties imminent. High shelf efficiency.",
-        "Storage patterns demonstrate maximum emotional and structural stability."
-    ]
-    chaos_messages = [
-        "Dairy structures are demonstrating aggressive degradation curves.",
-        "Action required: Consume imminent perishables to prevent structural decay.",
-        "Leafy green properties are losing biological integrity."
-    ]
-    message = random.choice(chaos_messages) if len(expiring) > 2 or len(expired) > 0 else random.choice(good_messages)
-    
-    st.markdown(f"""
-    <div class='action-panel mascot-bg'>
-        <h4 style='color: #166534; margin-top:0;'>📊 Diagnostics & Insights</h4>
-        <p style="font-size: 0.95rem; color: #15803D; font-weight: 500; margin: 0;"> 
-            {message} 
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+else:
+
+    for idx, food in enumerate(foods):
+
+        d = days_left(food["expiry"])
+
+        if d < 0:
+            status = f"💀 Expired {abs(d)} day(s) ago"
+
+        elif d == 0:
+            status = "🔥 Expires today"
+
+        elif d == 1:
+            status = "⚠️ Expires tomorrow"
+
+        else:
+            status = f"✅ {d} days left"
+
+        col1, col2 = st.columns([8,1])
+
+        with col1:
+
+            st.markdown(f"""
+            <div class="glass-card">
+
+                <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                ">
+
+                    <div>
+                        <div class="food-name">
+                            {food["emoji"]} {food["name"]}
+                        </div>
+
+                        <div class="food-status">
+                            {food["category"]}
+                        </div>
+                    </div>
+
+                    <div class="food-status">
+                        {status}
+                    </div>
+
+                </div>
+
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+
+            if st.button(
+                "🗑️",
+                key=f"delete_{idx}"
+            ):
+                delete_food(food["id"])
+                st.rerun()
+
+# ════════════════════════════════════════════════
+# MASCOT
+# ════════════════════════════════════════════════
+if len(expired) > 0 or len(expiring) > 2:
+    mascot_message = random.choice(mascot["bad"])
+else:
+    mascot_message = random.choice(mascot["good"])
+
+st.markdown(f"""
+<div class="floating-mascot">
+
+<div class="mascot-face">
+{mascot["emoji"]}
+</div>
+
+<div class="mascot-text">
+{mascot_message}
+</div>
+
+</div>
+""", unsafe_allow_html=True)
